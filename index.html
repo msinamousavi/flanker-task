@@ -1,0 +1,78 @@
+!DOCTYPE html
+html lang=en
+head
+  meta charset=UTF-8 
+  titleFlanker Tasktitle
+  style
+    body { font-family sans-serif; text-align center; margin-top 50px; }
+    #stimulus { font-size 48px; margin 50px; }
+    #startBtn, #downloadBtn { padding 10px 20px; font-size 16px; }
+  style
+head
+body
+  h1Flanker Taskh1
+  button id=startBtnStartbutton
+  div id=stimulusdiv
+  p id=feedbackp
+  button id=downloadBtn style=displaynone;Download Resultsbutton
+
+  script
+    const trials = [
+      {stim , correct f},
+      {stim , correct j},
+      {stim , correct j},
+      {stim , correct f}
+    ];
+
+    let currentTrial = 0, startTime = 0, results = [];
+
+    document.getElementById(startBtn).onclick = () = {
+      currentTrial = 0;
+      results = [];
+      document.getElementById(feedback).textContent = ;
+      runTrial();
+    };
+
+    function runTrial() {
+      if (currentTrial = trials.length) {
+        document.getElementById(stimulus).textContent = Task complete!;
+        document.getElementById(downloadBtn).style.display = inline;
+        return;
+      }
+      const trial = trials[currentTrial];
+      document.getElementById(stimulus).textContent = trial.stim;
+      startTime = performance.now();
+    }
+
+    document.addEventListener(keydown, (e) = {
+      if (![f, j].includes(e.key)) return;
+      const rt = performance.now() - startTime;
+      const trial = trials[currentTrial];
+      results.push({
+        stimulus trial.stim,
+        response e.key,
+        correct trial.correct,
+        accuracy e.key === trial.correct  1  0,
+        rt Math.round(rt)
+      });
+      document.getElementById(feedback).textContent = e.key === trial.correct  Correct  Incorrect;
+      currentTrial++;
+      setTimeout(() = {
+        document.getElementById(feedback).textContent = ;
+        runTrial();
+      }, 500);
+    });
+
+    document.getElementById(downloadBtn).onclick = () = {
+      const csv = stimulus,response,correct,accuracy,rtn +
+        results.map(r = `${r.stimulus},${r.response},${r.correct},${r.accuracy},${r.rt}`).join(n);
+      const blob = new Blob([csv], {type 'textcsv'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement(a);
+      a.href = url;
+      a.download = flanker_results.csv;
+      a.click();
+    };
+  script
+body
+html
