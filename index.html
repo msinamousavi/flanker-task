@@ -1,79 +1,118 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Flanker Task</title>
   <style>
-    body { font-family: sans-serif; text-align: center; margin-top: 50px; }
-    #stimulus { font-size: 48px; margin: 50px; }
-    #startBtn, #downloadBtn { padding: 10px 20px; font-size: 16px; }
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background-color: #f8f9fa;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 700px;
+      margin: 100px auto;
+      padding: 20px;
+    }
+    #stimulus {
+      font-size: 60px;
+      margin: 40px 0;
+      height: 80px;
+    }
+    #fixation {
+      font-size: 50px;
+      height: 80px;
+    }
+    button {
+      padding: 12px 24px;
+      font-size: 16px;
+      margin-top: 20px;
+      cursor: pointer;
+    }
+    .hidden {
+      display: none;
+    }
+    #summary {
+      margin-top: 30px;
+      font-size: 18px;
+    }
   </style>
 </head>
 <body>
-  <h1>Flanker Task</h1>
-  <button id="startBtn">Start</button>
-  <div id="stimulus"></div>
-  <p id="feedback"></p>
-  <button id="downloadBtn" style="display:none;">Download Results</button>
+  <div class="container">
+    <div id="instructions">
+      <h2>Welcome to the Flanker Task</h2>
+      <p>On each trial, a row of arrows will appear like this:</p>
+      <p><strong>&lt;&lt;&lt;&lt;&lt;</strong> or <strong>&lt;&lt;&gt;&lt;&lt;</strong></p>
+      <p>Your job is to respond based on the direction of the <strong>center</strong> arrow:</p>
+      <ul style="text-align: left;">
+        <li>Press <strong>F</strong> if the center arrow points <strong>left (&lt;)</strong></li>
+        <li>Press <strong>J</strong> if it points <strong>right (&gt;)</strong></li>
+      </ul>
+      <p>Try to respond as quickly and accurately as you can.</p>
+      <button id="startBtn">Start Task</button>
+    </div>
+
+    <div id="experiment" class="hidden">
+      <div id="fixation">+</div>
+      <div id="stimulus"></div>
+      <div id="feedback"></div>
+    </div>
+
+    <div id="end" class="hidden">
+      <h2>Task Complete!</h2>
+      <div id="summary"></div>
+      <button id="downloadBtn">Download Results</button>
+    </div>
+  </div>
 
   <script>
-    const trials = [
-      {stim: "<<<<<", correct: "f"},
-      {stim: ">>>>>", correct: "j"},
-      {stim: "<<><<", correct: "j"},
-      {stim: ">><>>", correct: "f"}
-    ];
+    const trials = [];
+    const flankers = ["<", ">"];
+    const centerArrows = ["<", ">"];
+    const numRepeats = 10;
 
-    let currentTrial = 0, startTime = 0, results = [];
+    // Generate 40 randomized trials (half congruent, half incongruent)
+    for (let i = 0; i < numRepeats; i++) {
+      // Congruent
+      const left = { stim: "<<<<<", correct: "f", congruent: true };
+      const right = { stim: ">>>>>", correct: "j", congruent: true };
+      trials.push(left, right);
 
-    document.getElementById("startBtn").onclick = () => {
-      currentTrial = 0;
-      results = [];
-      document.getElementById("feedback").textContent = "";
-      runTrial();
-    };
-
-    function runTrial() {
-      if (currentTrial >= trials.length) {
-        document.getElementById("stimulus").textContent = "Task complete!";
-        document.getElementById("downloadBtn").style.display = "inline";
-        return;
-      }
-      const trial = trials[currentTrial];
-      document.getElementById("stimulus").textContent = trial.stim;
-      startTime = performance.now();
+      // Incongruent
+      const incongruentLeft = { stim: ">>><>", correct: "f", congruent: false };
+      const incongruentRight = { stim: "<<><<", correct: "j", congruent: false };
+      trials.push(incongruentLeft, incongruentRight);
     }
 
-    document.addEventListener("keydown", (e) => {
-      if (!["f", "j"].includes(e.key)) return;
-      const rt = performance.now() - startTime;
-      const trial = trials[currentTrial];
-      results.push({
-        stimulus: trial.stim,
-        response: e.key,
-        correct: trial.correct,
-        accuracy: e.key === trial.correct ? 1 : 0,
-        rt: Math.round(rt)
-      });
-      document.getElementById("feedback").textContent = e.key === trial.correct ? "Correct" : "Incorrect";
-      currentTrial++;
-      setTimeout(() => {
-        document.getElementById("feedback").textContent = "";
-        runTrial();
-      }, 500);
-    });
+    // Shuffle the trials
+    function shuffle(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
 
-    document.getElementById("downloadBtn").onclick = () => {
-      const csv = "stimulus,response,correct,accuracy,rt\n" +
-        results.map(r => `${r.stimulus},${r.response},${r.correct},${r.accuracy},${r.rt}`).join("\n");
-      const blob = new Blob([csv], {type: 'text/csv'});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "flanker_results.csv";
-      a.click();
-    };
-  </script>
-</body>
-</html>
+    let currentTrial = 0;
+    let startTime = 0;
+    let results = [];
+    let timeoutID = null;
+
+    const startBtn = document.getElementById("startBtn");
+    const instructions = document.getElementById("instructions");
+    const experiment = document.getElementById("experiment");
+    const stimulus = document.getElementById("stimulus");
+    const feedback = document.getElementById("feedback");
+    const fixation = document.getElementById("fixation");
+    const endScreen = document.getElementById("end");
+    const summary = document.getElementById("summary");
+    const downloadBtn = document.getElementById("downloadBtn");
+
+    startBtn.onclick = () => {
+      instructions.classList.add("hidden");
+      experiment.classList.remove("hidden
+
 
