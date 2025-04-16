@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>Flanker Task</title>
     <style>
+        /* CSS styles remain the same as before */
         body {
             font-family: Arial, sans-serif;
             text-align: center;
@@ -17,37 +18,35 @@
         }
         .container {
             max-width: 700px;
-            /* Removed margin: 100px auto; as flexbox handles centering */
             padding: 30px;
             border: 1px solid #ccc; /* Optional: add a light border */
             background-color: #ffffff; /* White background for the container */
             box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Optional: subtle shadow */
         }
         #stimulus, #fixation {
-            font-size: 80px; /* Larger font for visibility */
-            font-family: 'Courier New', Courier, monospace; /* Monospace font for equal character width */
+            font-size: 80px;
+            font-family: 'Courier New', Courier, monospace;
             margin: 40px 0;
-            height: 90px; /* Ensure enough height */
-            line-height: 90px; /* Vertically center text within the div */
-            color: #333; /* Darker color for text */
+            height: 90px;
+            line-height: 90px;
+            color: #333;
         }
         #fixation {
-            font-size: 50px; /* Fixation cross can be slightly smaller */
-            /* height and line-height inherited or can be set specifically */
+            font-size: 50px;
         }
         button {
             padding: 12px 24px;
-            font-size: 18px; /* Slightly larger button text */
+            font-size: 18px;
             margin-top: 25px;
             cursor: pointer;
-            background-color: #007bff; /* Blue background */
-            color: white; /* White text */
+            background-color: #007bff;
+            color: white;
             border: none;
-            border-radius: 5px; /* Rounded corners */
-            transition: background-color 0.2s ease; /* Smooth hover effect */
+            border-radius: 5px;
+            transition: background-color 0.2s ease;
         }
         button:hover {
-            background-color: #0056b3; /* Darker blue on hover */
+            background-color: #0056b3;
         }
         .hidden {
             display: none;
@@ -55,56 +54,46 @@
         #summary {
             margin-top: 30px;
             font-size: 18px;
-            text-align: left; /* Align summary text left */
+            text-align: left;
         }
         #feedback {
-            font-size: 24px; /* Larger feedback text */
+            font-size: 24px;
             font-weight: bold;
             margin-top: 15px;
-            height: 30px; /* Give feedback space */
+            height: 30px;
         }
-        .correct {
-            color: green;
-        }
-        .incorrect {
-            color: red;
-        }
-        ul {
-            display: inline-block; /* Keep list items together */
-            text-align: left; /* Align list text left */
-            margin-top: 15px;
-            margin-bottom: 15px;
-        }
-        li {
-            margin-bottom: 8px; /* Space out list items */
-        }
+        .correct { color: green; }
+        .incorrect { color: red; }
+        ul { display: inline-block; text-align: left; margin-top: 15px; margin-bottom: 15px; }
+        li { margin-bottom: 8px; }
     </style>
 </head>
 <body>
     <div class="container">
         <div id="instructions">
-            <h2>Welcome to the Flanker Task</h2>
-            <p>A sequence of letters will appear after a '+' sign.</p>
-            <p>Your task is to identify the <strong>center letter</strong> and ignore the surrounding letters.</p>
-            <ul>
-                <li>Press <strong>F</strong> if the center letter is <strong>A</strong></li>
-                <li>Press <strong>J</strong> if the center letter is <strong>L</strong></li>
-            </ul>
-            <p>Please respond as quickly and accurately as possible.</p>
-            <p>Click "Start" when you are ready.</p>
-            <button id="startBtn">Start</button>
+             <h2>Welcome to the Flanker Task</h2>
+             <p>A sequence of letters will appear after a '+' sign.</p>
+             <p>Your task is to identify the <strong>center letter</strong> and ignore the surrounding letters.</p>
+             <ul>
+                 <li>Press <strong>F</strong> if the center letter is <strong>A</strong></li>
+                 <li>Press <strong>J</strong> if the center letter is <strong>L</strong></li>
+             </ul>
+             <p>Please respond as quickly and accurately as possible.</p>
+             <p>Click "Start" when you are ready.</p>
+             <button id="startBtn">Start</button>
         </div>
 
         <div id="task" class="hidden">
-             <div id="fixation">+</div>
-             <div id="stimulus" class="hidden"></div>
+            <div id="fixation">+</div>
+            <div id="stimulus" class="hidden"></div>
             <div id="feedback" class="hidden"></div>
         </div>
 
         <div id="summary" class="hidden">
             <h2>Task Complete!</h2>
             <p>Here are your results:</p>
-            <button id="restartBtn">Restart Task</button> </div>
+            <button id="restartBtn">Restart Task</button>
+        </div>
     </div>
 
     <script>
@@ -116,75 +105,259 @@
         const stimulusDiv = document.getElementById('stimulus');
         const feedbackDiv = document.getElementById('feedback');
         const summaryDiv = document.getElementById('summary');
-        // You might need restartBtn later if you implement it
-        // const restartButton = document.getElementById('restartBtn');
+        const restartButton = document.getElementById('restartBtn'); // Get restart button too
+
+        // --- Task State Variables ---
+        let trials = [];
+        let currentTrialIndex = 0;
+        let results = [];
+        let stimulusStartTime;
+        let responseListener = null; // To hold the keydown listener function
+
+        // --- Timing Parameters (in milliseconds) ---
+        const FIXATION_DURATION = 500; // 0.5 seconds
+        const FEEDBACK_DURATION = 750; // 0.75 seconds
+        const ITI = 500; // Inter-trial interval: 0.5 seconds (pause before next trial)
+
+        // --- Utility function to shuffle array (Fisher-Yates algorithm) ---
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]]; // Swap elements
+            }
+            return array;
+        }
+
+        // --- Define the Trials ---
+        function setupTrials() {
+            // Define base trials
+            const baseTrials = [
+                // Congruent trials (center letter matches flankers)
+                { stimulus: 'AAAAA', correctKey: 'f', condition: 'congruent' },
+                { stimulus: 'AAAAA', correctKey: 'f', condition: 'congruent' },
+                { stimulus: 'LLLLL', correctKey: 'j', condition: 'congruent' },
+                { stimulus: 'LLLLL', correctKey: 'j', condition: 'congruent' },
+                // Incongruent trials (center letter differs from flankers)
+                { stimulus: 'LLALL', correctKey: 'f', condition: 'incongruent' }, // Center A -> press F
+                { stimulus: 'LLALL', correctKey: 'f', condition: 'incongruent' },
+                { stimulus: 'AALAA', correctKey: 'j', condition: 'incongruent' }, // Center L -> press J
+                { stimulus: 'AALAA', correctKey: 'j', condition: 'incongruent' }
+            ];
+            // In a real experiment, you'd likely have many more trials (e.g., 40-100+)
+            // Shuffle the trials for randomness
+            trials = shuffleArray([...baseTrials]); // Use spread syntax to shuffle a copy
+            currentTrialIndex = 0;
+            results = [];
+            console.log("Trials setup and shuffled:", trials); // Log for debugging
+        }
+
+        // --- Start Experiment Function ---
+        function startExperiment() {
+            console.log("Experiment starting...");
+            setupTrials(); // Define and shuffle trials
+            if (trials.length > 0) {
+                runTrial(currentTrialIndex); // Start the first trial
+            } else {
+                console.error("No trials defined!");
+                // Maybe show an error message to the user
+            }
+        }
+
+        // --- Run a Single Trial ---
+        function runTrial(trialIndex) {
+            if (trialIndex >= trials.length) {
+                endExperiment(); // All trials completed
+                return;
+            }
+
+            console.log(`Running trial ${trialIndex + 1}/${trials.length}`);
+            const currentTrial = trials[trialIndex];
+
+            // Ensure task area is visible, hide stimulus and feedback
+            taskDiv.classList.remove('hidden');
+            stimulusDiv.classList.add('hidden');
+            feedbackDiv.classList.add('hidden');
+
+            // Show Fixation
+            fixationDiv.classList.remove('hidden');
+            fixationDiv.textContent = '+'; // Make sure it's the plus sign
+
+            // Schedule stimulus presentation after FIXATION_DURATION
+            setTimeout(() => {
+                // Hide Fixation
+                fixationDiv.classList.add('hidden');
+
+                // Prepare and Show Stimulus
+                stimulusDiv.textContent = currentTrial.stimulus;
+                stimulusDiv.classList.remove('hidden');
+                stimulusStartTime = performance.now(); // Record precise time
+                console.log(`Stimulus shown: ${currentTrial.stimulus} at ${stimulusStartTime}`);
+
+                // --- NEXT STEP: Add keyboard listener ---
+                // Remove any previous listener before adding a new one
+                if (responseListener) {
+                   document.removeEventListener('keydown', responseListener);
+                }
+                // Define the new listener function FOR THIS TRIAL
+                responseListener = (event) => handleKeyPress(event, currentTrial);
+                document.addEventListener('keydown', responseListener);
+                console.log("Keyboard listener added.");
+
+                // --- NEXT STEP: Set a timeout for response window (optional) ---
+                // e.g., setTimeout(() => handleTimeout(currentTrial), MAX_RESPONSE_TIME);
+
+            }, FIXATION_DURATION);
+        }
+
+        // --- Handle Key Press Function (Basic Structure) ---
+        function handleKeyPress(event, trial) {
+            const key = event.key.toLowerCase(); // Get pressed key (lowercase)
+            console.log(`Key pressed: ${key}`);
+
+            // Only respond to 'f' or 'j' keys
+            if (key === 'f' || key === 'j') {
+                 // --- THIS IS THE CORE LOGIC TO IMPLEMENT NEXT ---
+                 const reactionTime = performance.now() - stimulusStartTime;
+                 const correct = key === trial.correctKey;
+
+                 console.log(`Response: ${key}, Correct: ${correct}, RT: ${reactionTime.toFixed(1)} ms`);
+
+                 // IMPORTANT: Remove the listener immediately after a valid keypress
+                 // to prevent multiple responses for the same trial.
+                 document.removeEventListener('keydown', responseListener);
+                 responseListener = null; // Clear the reference
+                 console.log("Keyboard listener removed.");
+
+                 // Hide Stimulus
+                 stimulusDiv.classList.add('hidden');
+
+                 // Store result
+                 results.push({
+                     trialIndex: currentTrialIndex,
+                     stimulus: trial.stimulus,
+                     condition: trial.condition,
+                     response: key,
+                     correctKey: trial.correctKey,
+                     correct: correct,
+                     rt: reactionTime
+                 });
+
+                 // Show Feedback (IMPLEMENT NEXT)
+                 showFeedback(correct);
+
+                 // Schedule the next trial after feedback duration + ITI
+                 setTimeout(() => {
+                     currentTrialIndex++; // Move to the next trial index
+                     runTrial(currentTrialIndex); // Run the next trial
+                 }, FEEDBACK_DURATION + ITI);
+
+             } else {
+                 console.log("Invalid key pressed.");
+                 // Optionally provide feedback for invalid keys, or just ignore them.
+             }
+        }
+
+        // --- Show Feedback Function (Basic) ---
+        function showFeedback(correct) {
+            feedbackDiv.classList.remove('hidden'); // Make feedback visible
+            if (correct) {
+                feedbackDiv.textContent = "Correct";
+                feedbackDiv.className = 'correct'; // Use className to apply CSS class
+            } else {
+                feedbackDiv.textContent = "Incorrect";
+                feedbackDiv.className = 'incorrect'; // Use className to apply CSS class
+            }
+            console.log(`Showing feedback: ${feedbackDiv.textContent}`);
+            // Feedback will be hidden automatically when the next trial starts (in runTrial)
+            // or could be explicitly hidden after FEEDBACK_DURATION if ITI starts from stimulus offset
+        }
+
+
+        // --- End Experiment Function (Basic Structure) ---
+        function endExperiment() {
+            console.log("Experiment ended.");
+            console.log("Results:", results);
+
+            // Hide task elements
+            taskDiv.classList.add('hidden');
+            fixationDiv.classList.add('hidden');
+            stimulusDiv.classList.add('hidden');
+            feedbackDiv.classList.add('hidden');
+
+            // --- Calculate Summary Statistics (IMPLEMENT NEXT) ---
+            let correctCount = 0;
+            let totalRT = 0;
+            let correctCongruentRT = 0;
+            let correctIncongruentRT = 0;
+            let congruentCount = 0;
+            let incongruentCount = 0;
+
+            results.forEach(res => {
+                if (res.correct) {
+                    correctCount++;
+                    totalRT += res.rt;
+                    if (res.condition === 'congruent') {
+                       correctCongruentRT += res.rt;
+                       congruentCount++;
+                    } else if (res.condition === 'incongruent') {
+                       correctIncongruentRT += res.rt;
+                       incongruentCount++;
+                    }
+                }
+            });
+
+            const accuracy = (results.length > 0) ? (correctCount / results.length) * 100 : 0;
+            const averageRT = (correctCount > 0) ? (totalRT / correctCount) : 0;
+            const avgCongruentRT = (congruentCount > 0) ? (correctCongruentRT / congruentCount) : 0;
+            const avgIncongruentRT = (incongruentCount > 0) ? (correctIncongruentRT / incongruentCount) : 0;
+
+
+            // Display summary
+            summaryDiv.innerHTML = `
+                <h2>Task Complete!</h2>
+                <p>Here are your results:</p>
+                <ul>
+                    <li>Accuracy: ${accuracy.toFixed(1)}% (${correctCount}/${results.length})</li>
+                    <li>Average Correct Reaction Time: ${averageRT.toFixed(1)} ms</li>
+                    ${congruentCount > 0 ? `<li>Avg. Correct Congruent RT: ${avgCongruentRT.toFixed(1)} ms</li>` : ''}
+                    ${incongruentCount > 0 ? `<li>Avg. Correct Incongruent RT: ${avgIncongruentRT.toFixed(1)} ms</li>` : ''}
+                </ul>
+                <button id="restartBtn">Restart Task</button>
+            `; // Overwrite innerHTML including the button
+
+            // Re-add event listener for the new restart button
+             const newRestartButton = document.getElementById('restartBtn');
+             if (newRestartButton) { // Check if button exists
+                 newRestartButton.addEventListener('click', () => {
+                     console.log("Restart button clicked!");
+                     summaryDiv.classList.add('hidden'); // Hide summary
+                     startExperiment(); // Start over
+                 });
+             } else {
+                 console.error("Restart button not found after summary display.");
+             }
+
+
+            summaryDiv.classList.remove('hidden'); // Show summary
+        }
+
 
         // --- Event Listener for the Start Button ---
         startButton.addEventListener('click', () => {
-            console.log("Start button clicked!"); // For debugging
-
-            // Hide instructions
-            instructionsDiv.classList.add('hidden');
-
-            // Show the main task area
-            taskDiv.classList.remove('hidden');
-
-            // Ensure fixation is visible and stimulus/feedback are hidden initially for the task
-            fixationDiv.classList.remove('hidden');
-            stimulusDiv.classList.add('hidden');
-            feedbackDiv.classList.add('hidden');
+            console.log("Start button clicked!");
+            instructionsDiv.classList.add('hidden'); // Hide instructions
             summaryDiv.classList.add('hidden'); // Ensure summary is hidden
-
-            // --- NEXT STEP: Start the actual experiment ---
-            // Call a function here to begin the sequence of trials
-            // e.g., startExperiment();
-            console.log("Task area shown, fixation should be visible.");
-            // For now, it will just show the fixation cross (+)
+            startExperiment(); // Start the experiment
         });
 
-        // --- Placeholder for the main experiment logic ---
-        // function startExperiment() {
-        //    console.log("Experiment starting...");
-        //    // Define trials (stimuli, correct answers)
-        //    // Set up trial counter
-        //    // Call function to run the first trial
-        //    // runTrial(currentTrialIndex);
-        // }
-
-        // --- Placeholder for running a single trial ---
-        // function runTrial(trialIndex) {
-        //    console.log(`Running trial ${trialIndex}`);
-        //    // 1. Show Fixation (already visible or show for specific duration)
-        //    // 2. Use setTimeout to hide fixation and show stimulus after a delay
-        //    // 3. Record stimulus onset time
-        //    // 4. Add keyboard listener (document.addEventListener('keydown', handleKeyPress))
-        //    // 5. Set a timeout for response window (if needed)
-        // }
-
-        // --- Placeholder for handling key presses ---
-        // function handleKeyPress(event) {
-        //    // Check if the key pressed is F or J
-        //    // Record reaction time
-        //    // Determine if response is correct
-        //    // Remove keyboard listener for this trial
-        //    // Show feedback
-        //    // Use setTimeout to proceed to the next trial or end experiment
-        // }
-
-        // --- Placeholder for showing feedback ---
-        // function showFeedback(correct) {
-        //    // Show feedback div
-        //    // Set text and class (correct/incorrect)
-        //    // Use setTimeout to hide feedback and start next trial/end
-        // }
-
-        // --- Placeholder for ending the experiment ---
-        // function endExperiment() {
-        //    // Hide task div
-        //    // Calculate summary statistics (accuracy, avg RT)
-        //    // Display summary statistics in the summary div
-        //    // Show summary div
-        // }
+        // --- Event Listener for the Restart Button (Initial one, might be replaced) ---
+        // Note: Since we rewrite the summaryDiv's innerHTML, this listener might need to be re-attached
+        // inside endExperiment() to the *new* button element. See endExperiment().
+        // restartButton.addEventListener('click', () => {
+        //     console.log("Restart button clicked!");
+        //     summaryDiv.classList.add('hidden'); // Hide summary
+        //     startExperiment(); // Start over
+        // });
 
     </script>
     </body>
