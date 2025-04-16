@@ -17,7 +17,7 @@
       padding: 20px;
     }
     #stimulus {
-      font-size: 60px;
+      font-size: 80px;
       margin: 40px 0;
       height: 80px;
     }
@@ -38,20 +38,22 @@
       margin-top: 30px;
       font-size: 18px;
     }
+    #feedback {
+      font-size: 20px;
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <div id="instructions">
       <h2>Welcome to the Flanker Task</h2>
-      <p>On each trial, a row of arrows will appear like this:</p>
-      <p><strong>&lt;&lt;&lt;&lt;&lt;</strong> or <strong>&lt;&lt;&gt;&lt;&lt;</strong></p>
-      <p>Your job is to respond based on the direction of the <strong>center</strong> arrow:</p>
+      <p>In this task, a sequence of letters will appear. Your job is to respond based on the direction of the <strong>center letter</strong>:</p>
       <ul style="text-align: left;">
-        <li>Press <strong>F</strong> if the center arrow points <strong>left (&lt;)</strong></li>
-        <li>Press <strong>J</strong> if it points <strong>right (&gt;)</strong></li>
+        <li>Press <strong>F</strong> if the center letter is a <strong>A</strong></li>
+        <li>Press <strong>J</strong> if the center letter is a <strong>L</strong></li>
       </ul>
-      <p>Try to respond as quickly and accurately as you can.</p>
+      <p>Try to respond as quickly and accurately as you can. The task will last around 25 minutes.</p>
       <button id="startBtn">Start Task</button>
     </div>
 
@@ -69,22 +71,21 @@
   </div>
 
   <script>
-    const trials = [];
-    const flankers = ["<", ">"];
-    const centerArrows = ["<", ">"];
-    const numRepeats = 10;
+    const letters = ["A", "L"];
+    const flankers = ["B", "C", "D", "E", "F", "G", "H", "I", "J", "K"];
+    const numTrials = 250;  // Increase trials to lengthen the task
+    const colors = ["#FF6347", "#4682B4", "#32CD32"];  // Red, Blue, Green
 
-    // Generate 40 randomized trials (half congruent, half incongruent)
-    for (let i = 0; i < numRepeats; i++) {
+    // Generate randomized trials (half congruent, half incongruent)
+    const trials = [];
+    for (let i = 0; i < numTrials / 2; i++) {
       // Congruent
-      const left = { stim: "<<<<<", correct: "f", congruent: true };
-      const right = { stim: ">>>>>", correct: "j", congruent: true };
-      trials.push(left, right);
+      trials.push({ stim: `${letters[0]}${letters[0]}${letters[0]}`, correct: "f", congruent: true, color: colors[0] });
+      trials.push({ stim: `${letters[1]}${letters[1]}${letters[1]}`, correct: "j", congruent: true, color: colors[1] });
 
       // Incongruent
-      const incongruentLeft = { stim: ">>><>", correct: "f", congruent: false };
-      const incongruentRight = { stim: "<<><<", correct: "j", congruent: false };
-      trials.push(incongruentLeft, incongruentRight);
+      trials.push({ stim: `${flankers[Math.floor(Math.random() * flankers.length)]}${letters[0]}${flankers[Math.floor(Math.random() * flankers.length)]}`, correct: "f", congruent: false, color: colors[2] });
+      trials.push({ stim: `${flankers[Math.floor(Math.random() * flankers.length)]}${letters[1]}${flankers[Math.floor(Math.random() * flankers.length)]}`, correct: "j", congruent: false, color: colors[2] });
     }
 
     // Shuffle the trials
@@ -113,6 +114,89 @@
 
     startBtn.onclick = () => {
       instructions.classList.add("hidden");
-      experiment.classList.remove("hidden
+      experiment.classList.remove("hidden");
+      shuffle(trials);
+      currentTrial = 0;
+      results = [];
+      runTrial();
+    };
+
+    function runTrial() {
+      if (currentTrial >= trials.length) {
+        endTask();
+        return;
+      }
+
+      stimulus.textContent = "";
+      feedback.textContent = "";
+      fixation.textContent = "+";
+
+      // Wait 500ms before showing stimulus
+      setTimeout(() => {
+        fixation.textContent = "";
+        const trial = trials[currentTrial];
+        stimulus.textContent = trial.stim;
+        stimulus.style.color = trial.color;
+        startTime = performance.now();
+
+        // Timeout if no response after 2s
+        timeoutID = setTimeout(() => {
+          recordResponse("none", false, 2000);
+        }, 2000);
+      }, 500);
+    }
+
+    document.addEventListener("keydown", (e) => {
+      if (!["f", "j"].includes(e.key)) return;
+      if (stimulus.textContent === "") return; // Only respond during stimulus
+      clearTimeout(timeoutID);
+
+      const rt = performance.now() - startTime;
+      const trial = trials[currentTrial];
+      const correct = e.key === trial.correct;
+      recordResponse(e.key, correct, rt);
+    });
+
+    function recordResponse(key, correct, rt) {
+      const trial = trials[currentTrial];
+      results.push({
+        stimulus: trial.stim,
+        response: key,
+        correct: trial.correct,
+        accuracy: correct ? 1 : 0,
+        congruent: trial.congruent ? 1 : 0,
+        rt: Math.round(rt)
+      });
+
+      feedback.textContent = key === "none" ? "Too slow!" : correct ? "Correct" : "Incorrect";
+      currentTrial++;
+
+      setTimeout(() => {
+        feedback.textContent = "";
+        runTrial();
+      }, 500);
+    }
+
+    function endTask() {
+      experiment.classList.add("hidden");
+      endScreen.classList.remove("hidden");
+
+      const total = results.length;
+      const correct = results.filter(r => r.accuracy).length;
+      const avgRT = Math.round(results.reduce((sum, r) => sum + r.rt, 0) / total);
+      const accuracyPercentage = Math.round((correct / total) * 100);
+      summary.innerHTML = `
+        <p>Accuracy: <strong>${correct} / ${total} (${accuracyPercentage}%)</strong></p>
+        <p>Average RT: <strong>${avgRT} ms</strong></p>
+      `;
+    }
+
+    downloadBtn.onclick = () => {
+      const csv = "stimulus,response,correct,accuracy,congruent,rt\n" +
+        results.map(r =>
+          `${r.stimulus},${r.response},${r.correct},${r.accuracy},${r.congruent},${r.rt}`
+        ).join("\n");
+      const blob = new Blob([csv], { type: "text/csv" });
+      const url = URL.createObjectURL(blob
 
 
