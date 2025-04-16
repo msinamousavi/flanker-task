@@ -1,61 +1,110 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Flanker Task</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      background-color: #f8f9fa;
-      margin: 0;
-      padding: 0;
-    }
-    .container {
-      max-width: 700px;
-      margin: 100px auto;
-      padding: 20px;
-    }
-    #stimulus {
-      font-size: 80px;
-      margin: 40px 0;
-      height: 80px;
-    }
-    #fixation {
-      font-size: 50px;
-      height: 80px;
-    }
-    button {
-      padding: 12px 24px;
-      font-size: 16px;
-      margin-top: 20px;
-      cursor: pointer;
-    }
-    .hidden {
-      display: none;
-    }
-    #summary {
-      margin-top: 30px;
-      font-size: 18px;
-    }
-    #feedback {
-      font-size: 20px;
-      margin-top: 10px;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <title>Flanker Task</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f8f9fa; /* Light grey background */
+            margin: 0;
+            padding: 0;
+            display: flex; /* Use flexbox for vertical centering */
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh; /* Ensure body takes full viewport height */
+        }
+        .container {
+            max-width: 700px;
+            /* Removed margin: 100px auto; as flexbox handles centering */
+            padding: 30px;
+            border: 1px solid #ccc; /* Optional: add a light border */
+            background-color: #ffffff; /* White background for the container */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Optional: subtle shadow */
+        }
+        #stimulus, #fixation {
+            font-size: 80px; /* Larger font for visibility */
+            font-family: 'Courier New', Courier, monospace; /* Monospace font for equal character width */
+            margin: 40px 0;
+            height: 90px; /* Ensure enough height */
+            line-height: 90px; /* Vertically center text within the div */
+            color: #333; /* Darker color for text */
+        }
+        #fixation {
+            font-size: 50px; /* Fixation cross can be slightly smaller */
+            /* height and line-height inherited or can be set specifically */
+        }
+        button {
+            padding: 12px 24px;
+            font-size: 18px; /* Slightly larger button text */
+            margin-top: 25px;
+            cursor: pointer;
+            background-color: #007bff; /* Blue background */
+            color: white; /* White text */
+            border: none;
+            border-radius: 5px; /* Rounded corners */
+            transition: background-color 0.2s ease; /* Smooth hover effect */
+        }
+        button:hover {
+            background-color: #0056b3; /* Darker blue on hover */
+        }
+        .hidden {
+            display: none;
+        }
+        #summary {
+            margin-top: 30px;
+            font-size: 18px;
+            text-align: left; /* Align summary text left */
+        }
+        #feedback {
+            font-size: 24px; /* Larger feedback text */
+            font-weight: bold;
+            margin-top: 15px;
+            height: 30px; /* Give feedback space */
+        }
+        .correct {
+            color: green;
+        }
+        .incorrect {
+            color: red;
+        }
+        ul {
+            display: inline-block; /* Keep list items together */
+            text-align: left; /* Align list text left */
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+        li {
+            margin-bottom: 8px; /* Space out list items */
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <div id="instructions">
-      <h2>Welcome to the Flanker Task</h2>
-      <p>In this task, a sequence of letters will appear. Your job is to respond based on the direction of the <strong>center letter</strong>:</p>
-      <ul style="text-align: left;">
-        <li>Press <strong>F</strong> if the center letter is a <strong>A</strong></li>
-        <li>Press <strong>J</strong> if the center letter is a <strong>L</strong></li>
-      </ul>
-      <p>Try to respond as quickly and accurately as you can. The task will last around 25 minutes.</p>
-      <button id="startBtn">Start Task</button>
-    </
+    <div class="container">
+        <div id="instructions">
+            <h2>Welcome to the Flanker Task</h2>
+            <p>A sequence of letters will appear after a '+' sign.</p>
+            <p>Your task is to identify the <strong>center letter</strong> and ignore the surrounding letters.</p>
+            <ul>
+                <li>Press <strong>F</strong> if the center letter is <strong>A</strong></li>
+                <li>Press <strong>J</strong> if the center letter is <strong>L</strong></li>
+            </ul>
+            <p>Please respond as quickly and accurately as possible.</p>
+            <p>Click "Start" when you are ready.</p>
+            <button id="startBtn">Start</button>
+        </div>
 
+        <div id="task" class="hidden">
+            <div id="fixation">+</div>     <div id="stimulus"></div>    <div id="feedback"></div>    </div>
+
+        <div id="summary" class="hidden">
+            <h2>Task Complete!</h2>
+            <p>Here are your results:</p>
+            <button id="restartBtn">Restart Task</button> </div>
+    </div>
+
+    </body>
+</html>
 
 
