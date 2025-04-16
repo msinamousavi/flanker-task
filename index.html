@@ -4,24 +4,24 @@
     <meta charset="UTF-8">
     <title>Flanker Task</title>
     <style>
-        /* CSS styles remain the same as before */
+        /* Basic CSS - Consider adding more specific styles for the form */
         body {
             font-family: Arial, sans-serif;
             text-align: center;
-            background-color: #f8f9fa; /* Light grey background */
+            background-color: #f8f9fa;
             margin: 0;
             padding: 0;
-            display: flex; /* Use flexbox for vertical centering */
+            display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh; /* Ensure body takes full viewport height */
+            min-height: 100vh;
         }
         .container {
             max-width: 700px;
             padding: 30px;
-            border: 1px solid #ccc; /* Optional: add a light border */
-            background-color: #ffffff; /* White background for the container */
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Optional: subtle shadow */
+            border: 1px solid #ccc;
+            background-color: #ffffff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
         #stimulus, #fixation {
             font-size: 80px;
@@ -31,9 +31,7 @@
             line-height: 90px;
             color: #333;
         }
-        #fixation {
-            font-size: 50px;
-        }
+        #fixation { font-size: 50px; }
         button {
             padding: 12px 24px;
             font-size: 18px;
@@ -45,43 +43,75 @@
             border-radius: 5px;
             transition: background-color 0.2s ease;
         }
-        button:hover {
-            background-color: #0056b3;
+        button:hover { background-color: #0056b3; }
+        .hidden { display: none; }
+        #summary ul, #instructions ul, #participantInfo form {
+             display: inline-block;
+             text-align: left;
+             margin-top: 15px;
+             margin-bottom: 15px;
         }
-        .hidden {
-            display: none;
+         #summary li, #instructions li, #participantInfo label, #participantInfo input, #participantInfo select {
+             margin-bottom: 10px; /* Spacing for form/list items */
+             display: block; /* Make form elements block for vertical layout */
+             font-size: 16px;
         }
-        #summary {
-            margin-top: 30px;
-            font-size: 18px;
-            text-align: left;
-        }
-        #feedback {
-            font-size: 24px;
-            font-weight: bold;
-            margin-top: 15px;
-            height: 30px;
-        }
+         #participantInfo input, #participantInfo select {
+             padding: 8px;
+             margin-left: 5px; /* Align inputs slightly */
+             min-width: 150px;
+         }
+         #participantInfo label {
+             font-weight: bold;
+         }
+        #feedback { font-size: 24px; font-weight: bold; margin-top: 15px; height: 30px; }
         .correct { color: green; }
         .incorrect { color: red; }
-        ul { display: inline-block; text-align: left; margin-top: 15px; margin-bottom: 15px; }
-        li { margin-bottom: 8px; }
+        .error-message { color: red; font-size: 14px; margin-top: 10px; }
+        #developerDataButton { background-color: #6c757d; margin-left: 15px; } /* Style for download button */
+        #developerDataButton:hover { background-color: #5a6268; }
     </style>
 </head>
 <body>
     <div class="container">
         <div id="instructions">
              <h2>Welcome to the Flanker Task</h2>
-             <p>A sequence of letters will appear after a '+' sign.</p>
+             <p>Please read the instructions carefully.</p>
+             <p>You will first be asked for some basic information.</p>
+             <p>Then, a sequence of letters will appear after a '+' sign.</p>
              <p>Your task is to identify the <strong>center letter</strong> and ignore the surrounding letters.</p>
              <ul>
                  <li>Press <strong>F</strong> if the center letter is <strong>A</strong></li>
                  <li>Press <strong>J</strong> if the center letter is <strong>L</strong></li>
              </ul>
              <p>Please respond as quickly and accurately as possible.</p>
-             <p>Click "Start" when you are ready.</p>
-             <button id="startBtn">Start</button>
+             <p>Click "Continue" to enter your information.</p>
+             <button id="continueToInfoBtn">Continue</button>
         </div>
+
+        <div id="participantInfo" class="hidden">
+            <h2>Participant Information</h2>
+            <form id="infoForm">
+                <label for="participantId">Participant ID (5 digits):</label>
+                <input type="text" id="participantId" name="participantId" pattern="\d{5}" required maxlength="5" title="Enter exactly 5 digits">
+
+                <label for="age">Age:</label>
+                <input type="number" id="age" name="age" required min="1" max="120">
+
+                <label for="gender">Gender:</label>
+                <select id="gender" name="gender" required>
+                    <option value="">--Please select--</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Non-binary">Non-binary</option>
+                    <option value="Other">Other</option>
+                    <option value="Prefer_not_to_say">Prefer not to say</option>
+                </select>
+                <button type="submit" id="startTaskBtn">Start Task</button>
+                 <div id="infoError" class="error-message hidden">Please fill out all fields correctly.</div>
+            </form>
+        </div>
+
 
         <div id="task" class="hidden">
             <div id="fixation">+</div>
@@ -91,274 +121,339 @@
 
         <div id="summary" class="hidden">
             <h2>Task Complete!</h2>
-            <p>Here are your results:</p>
+            <p>Here is a summary of your results:</p>
+            <div id="summaryResults">
+                 </div>
             <button id="restartBtn">Restart Task</button>
-        </div>
+            <button id="developerDataButton">Download Raw Data (JSON)</button> </div>
     </div>
 
     <script>
         // --- Get References to HTML Elements ---
-        const startButton = document.getElementById('startBtn');
+        const continueToInfoBtn = document.getElementById('continueToInfoBtn');
         const instructionsDiv = document.getElementById('instructions');
+        const participantInfoDiv = document.getElementById('participantInfo');
+        const infoForm = document.getElementById('infoForm');
+        const participantIdInput = document.getElementById('participantId');
+        const ageInput = document.getElementById('age');
+        const genderInput = document.getElementById('gender');
+        const startTaskBtn = document.getElementById('startTaskBtn');
+        const infoErrorDiv = document.getElementById('infoError');
+
         const taskDiv = document.getElementById('task');
         const fixationDiv = document.getElementById('fixation');
         const stimulusDiv = document.getElementById('stimulus');
         const feedbackDiv = document.getElementById('feedback');
         const summaryDiv = document.getElementById('summary');
-        const restartButton = document.getElementById('restartBtn'); // Get restart button too
+        const summaryResultsDiv = document.getElementById('summaryResults');
+        const restartBtn = document.getElementById('restartBtn');
+        const developerDataButton = document.getElementById('developerDataButton');
+
 
         // --- Task State Variables ---
         let trials = [];
         let currentTrialIndex = 0;
-        let results = [];
+        let results = []; // Will store raw trial data
+        let summaryMetrics = {}; // Will store calculated summary metrics
+        let participantData = {}; // To store ID, age, gender
         let stimulusStartTime;
-        let responseListener = null; // To hold the keydown listener function
+        let responseListener = null;
 
         // --- Timing Parameters (in milliseconds) ---
-        const FIXATION_DURATION = 500; // 0.5 seconds
-        const FEEDBACK_DURATION = 750; // 0.75 seconds
-        const ITI = 500; // Inter-trial interval: 0.5 seconds (pause before next trial)
+        const FIXATION_DURATION = 500;
+        const FEEDBACK_DURATION = 750;
+        const ITI = 500; // Inter-trial interval
 
-        // --- Utility function to shuffle array (Fisher-Yates algorithm) ---
+        // --- Utility: Shuffle Array ---
         function shuffleArray(array) {
             for (let i = array.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]]; // Swap elements
+                [array[i], array[j]] = [array[j], array[i]];
             }
             return array;
         }
 
-        // --- Define the Trials ---
+         // --- Utility: Calculate Standard Deviation ---
+         function calculateSD(data, mean) {
+             if (!data || data.length === 0) return 0;
+             const variance = data.reduce((sum, value) => sum + Math.pow(value - mean, 2), 0) / data.length;
+             return Math.sqrt(variance);
+         }
+
+        // --- Define the Trials (100 trials) ---
         function setupTrials() {
-            // Define base trials
-            const baseTrials = [
-                // Congruent trials (center letter matches flankers)
-                { stimulus: 'AAAAA', correctKey: 'f', condition: 'congruent' },
-                { stimulus: 'AAAAA', correctKey: 'f', condition: 'congruent' },
-                { stimulus: 'LLLLL', correctKey: 'j', condition: 'congruent' },
-                { stimulus: 'LLLLL', correctKey: 'j', condition: 'congruent' },
-                // Incongruent trials (center letter differs from flankers)
-                { stimulus: 'LLALL', correctKey: 'f', condition: 'incongruent' }, // Center A -> press F
-                { stimulus: 'LLALL', correctKey: 'f', condition: 'incongruent' },
-                { stimulus: 'AALAA', correctKey: 'j', condition: 'incongruent' }, // Center L -> press J
-                { stimulus: 'AALAA', correctKey: 'j', condition: 'incongruent' }
-            ];
-            // In a real experiment, you'd likely have many more trials (e.g., 40-100+)
-            // Shuffle the trials for randomness
-            trials = shuffleArray([...baseTrials]); // Use spread syntax to shuffle a copy
+            const stimuli = {
+                congruentA: { stimulus: 'AAAAA', correctKey: 'f', condition: 'congruent' },
+                congruentL: { stimulus: 'LLLLL', correctKey: 'j', condition: 'congruent' },
+                incongruentA: { stimulus: 'LLALL', correctKey: 'f', condition: 'incongruent' }, // Center A -> press F
+                incongruentL: { stimulus: 'AALAA', correctKey: 'j', condition: 'incongruent' }  // Center L -> press J
+            };
+
+            const baseTrials = [];
+            const trialsPerType = 25; // 25 * 4 = 100 trials
+
+            for (let i = 0; i < trialsPerType; i++) {
+                baseTrials.push({...stimuli.congruentA});
+                baseTrials.push({...stimuli.congruentL});
+                baseTrials.push({...stimuli.incongruentA});
+                baseTrials.push({...stimuli.incongruentL});
+            }
+
+            trials = shuffleArray(baseTrials);
             currentTrialIndex = 0;
             results = [];
-            console.log("Trials setup and shuffled:", trials); // Log for debugging
+            console.log(`Setup complete: ${trials.length} trials generated.`);
         }
 
-        // --- Start Experiment Function ---
+        // --- Start Experiment Flow ---
         function startExperiment() {
-            console.log("Experiment starting...");
-            setupTrials(); // Define and shuffle trials
+            console.log("Starting experiment for participant:", participantData);
+            setupTrials();
             if (trials.length > 0) {
-                runTrial(currentTrialIndex); // Start the first trial
+                runTrial(currentTrialIndex);
             } else {
                 console.error("No trials defined!");
-                // Maybe show an error message to the user
             }
         }
 
         // --- Run a Single Trial ---
         function runTrial(trialIndex) {
             if (trialIndex >= trials.length) {
-                endExperiment(); // All trials completed
+                endExperiment();
                 return;
             }
-
-            console.log(`Running trial ${trialIndex + 1}/${trials.length}`);
+            // console.log(`Running trial ${trialIndex + 1}/${trials.length}`); // Less console noise
             const currentTrial = trials[trialIndex];
 
-            // Ensure task area is visible, hide stimulus and feedback
             taskDiv.classList.remove('hidden');
             stimulusDiv.classList.add('hidden');
             feedbackDiv.classList.add('hidden');
-
-            // Show Fixation
             fixationDiv.classList.remove('hidden');
-            fixationDiv.textContent = '+'; // Make sure it's the plus sign
+            fixationDiv.textContent = '+';
 
-            // Schedule stimulus presentation after FIXATION_DURATION
             setTimeout(() => {
-                // Hide Fixation
                 fixationDiv.classList.add('hidden');
-
-                // Prepare and Show Stimulus
                 stimulusDiv.textContent = currentTrial.stimulus;
                 stimulusDiv.classList.remove('hidden');
-                stimulusStartTime = performance.now(); // Record precise time
-                console.log(`Stimulus shown: ${currentTrial.stimulus} at ${stimulusStartTime}`);
+                stimulusStartTime = performance.now();
 
-                // --- NEXT STEP: Add keyboard listener ---
-                // Remove any previous listener before adding a new one
                 if (responseListener) {
                    document.removeEventListener('keydown', responseListener);
                 }
-                // Define the new listener function FOR THIS TRIAL
                 responseListener = (event) => handleKeyPress(event, currentTrial);
                 document.addEventListener('keydown', responseListener);
-                console.log("Keyboard listener added.");
-
-                // --- NEXT STEP: Set a timeout for response window (optional) ---
-                // e.g., setTimeout(() => handleTimeout(currentTrial), MAX_RESPONSE_TIME);
 
             }, FIXATION_DURATION);
         }
 
-        // --- Handle Key Press Function (Basic Structure) ---
+        // --- Handle Key Press ---
         function handleKeyPress(event, trial) {
-            const key = event.key.toLowerCase(); // Get pressed key (lowercase)
-            console.log(`Key pressed: ${key}`);
-
-            // Only respond to 'f' or 'j' keys
+            const key = event.key.toLowerCase();
             if (key === 'f' || key === 'j') {
-                 // --- THIS IS THE CORE LOGIC TO IMPLEMENT NEXT ---
                  const reactionTime = performance.now() - stimulusStartTime;
                  const correct = key === trial.correctKey;
 
-                 console.log(`Response: ${key}, Correct: ${correct}, RT: ${reactionTime.toFixed(1)} ms`);
-
-                 // IMPORTANT: Remove the listener immediately after a valid keypress
-                 // to prevent multiple responses for the same trial.
                  document.removeEventListener('keydown', responseListener);
-                 responseListener = null; // Clear the reference
-                 console.log("Keyboard listener removed.");
-
-                 // Hide Stimulus
+                 responseListener = null;
                  stimulusDiv.classList.add('hidden');
 
-                 // Store result
+                 // Store detailed raw data for this trial
                  results.push({
+                     participantId: participantData.id,
+                     age: participantData.age,
+                     gender: participantData.gender,
                      trialIndex: currentTrialIndex,
                      stimulus: trial.stimulus,
                      condition: trial.condition,
                      response: key,
                      correctKey: trial.correctKey,
-                     correct: correct,
+                     correct: correct ? 1 : 0, // Store as 1 or 0
                      rt: reactionTime
                  });
 
-                 // Show Feedback (IMPLEMENT NEXT)
                  showFeedback(correct);
 
-                 // Schedule the next trial after feedback duration + ITI
                  setTimeout(() => {
-                     currentTrialIndex++; // Move to the next trial index
-                     runTrial(currentTrialIndex); // Run the next trial
+                     currentTrialIndex++;
+                     runTrial(currentTrialIndex);
                  }, FEEDBACK_DURATION + ITI);
-
-             } else {
-                 console.log("Invalid key pressed.");
-                 // Optionally provide feedback for invalid keys, or just ignore them.
-             }
+            }
         }
 
-        // --- Show Feedback Function (Basic) ---
+        // --- Show Feedback ---
         function showFeedback(correct) {
-            feedbackDiv.classList.remove('hidden'); // Make feedback visible
+            feedbackDiv.classList.remove('hidden');
             if (correct) {
                 feedbackDiv.textContent = "Correct";
-                feedbackDiv.className = 'correct'; // Use className to apply CSS class
+                feedbackDiv.className = 'correct';
             } else {
                 feedbackDiv.textContent = "Incorrect";
-                feedbackDiv.className = 'incorrect'; // Use className to apply CSS class
+                feedbackDiv.className = 'incorrect';
             }
-            console.log(`Showing feedback: ${feedbackDiv.textContent}`);
-            // Feedback will be hidden automatically when the next trial starts (in runTrial)
-            // or could be explicitly hidden after FEEDBACK_DURATION if ITI starts from stimulus offset
         }
 
-
-        // --- End Experiment Function (Basic Structure) ---
+        // --- End Experiment and Calculate Metrics ---
         function endExperiment() {
-            console.log("Experiment ended.");
-            console.log("Results:", results);
-
-            // Hide task elements
+            console.log("Experiment ended. Calculating metrics...");
             taskDiv.classList.add('hidden');
-            fixationDiv.classList.add('hidden');
-            stimulusDiv.classList.add('hidden');
-            feedbackDiv.classList.add('hidden');
 
-            // --- Calculate Summary Statistics (IMPLEMENT NEXT) ---
+            // --- Calculations ---
             let correctCount = 0;
-            let totalRT = 0;
-            let correctCongruentRT = 0;
-            let correctIncongruentRT = 0;
-            let congruentCount = 0;
-            let incongruentCount = 0;
+            let totalCorrectRT = 0;
+            let correctRTs = []; // Array for overall SD calculation
+
+            let congruentCorrectCount = 0;
+            let incongruentCorrectCount = 0;
+            let congruentTotal = 0;
+            let incongruentTotal = 0;
+            let congruentCorrectRTtotal = 0;
+            let incongruentCorrectRTtotal = 0;
+            let congruentCorrectRTs = []; // Array for congruent SD
+            let incongruentCorrectRTs = []; // Array for incongruent SD
 
             results.forEach(res => {
-                if (res.correct) {
+                if (res.condition === 'congruent') congruentTotal++;
+                if (res.condition === 'incongruent') incongruentTotal++;
+
+                if (res.correct === 1) {
                     correctCount++;
-                    totalRT += res.rt;
+                    totalCorrectRT += res.rt;
+                    correctRTs.push(res.rt);
+
                     if (res.condition === 'congruent') {
-                       correctCongruentRT += res.rt;
-                       congruentCount++;
+                        congruentCorrectCount++;
+                        congruentCorrectRTtotal += res.rt;
+                        congruentCorrectRTs.push(res.rt);
                     } else if (res.condition === 'incongruent') {
-                       correctIncongruentRT += res.rt;
-                       incongruentCount++;
+                        incongruentCorrectCount++;
+                        incongruentCorrectRTtotal += res.rt;
+                        incongruentCorrectRTs.push(res.rt);
                     }
                 }
             });
 
-            const accuracy = (results.length > 0) ? (correctCount / results.length) * 100 : 0;
-            const averageRT = (correctCount > 0) ? (totalRT / correctCount) : 0;
-            const avgCongruentRT = (congruentCount > 0) ? (correctCongruentRT / congruentCount) : 0;
-            const avgIncongruentRT = (incongruentCount > 0) ? (correctIncongruentRT / incongruentCount) : 0;
+            const totalTrials = results.length;
+            const overallAccuracy = totalTrials > 0 ? (correctCount / totalTrials) * 100 : 0;
+            const overallMeanRT = correctCount > 0 ? (totalCorrectRT / correctCount) : 0;
+            const overallSDRT = calculateSD(correctRTs, overallMeanRT);
+            const errorRate = 100 - overallAccuracy;
 
+            const congruentAccuracy = congruentTotal > 0 ? (congruentCorrectCount / congruentTotal) * 100 : 0;
+            const incongruentAccuracy = incongruentTotal > 0 ? (incongruentCorrectCount / incongruentTotal) * 100 : 0;
 
-            // Display summary
-            summaryDiv.innerHTML = `
-                <h2>Task Complete!</h2>
-                <p>Here are your results:</p>
+            const congruentMeanRT = congruentCorrectCount > 0 ? (congruentCorrectRTtotal / congruentCorrectCount) : 0;
+            const incongruentMeanRT = incongruentCorrectCount > 0 ? (incongruentCorrectRTtotal / incongruentCorrectCount) : 0;
+
+            const congruentSDRT = calculateSD(congruentCorrectRTs, congruentMeanRT);
+            const incongruentSDRT = calculateSD(incongruentCorrectRTs, incongruentMeanRT);
+
+            // Flanker Interference Effects
+            const interferenceRT = (congruentMeanRT > 0 && incongruentMeanRT > 0) ? (incongruentMeanRT - congruentMeanRT) : 'N/A';
+            const interferenceAccuracy = (congruentAccuracy - incongruentAccuracy);
+
+            // Store calculated metrics
+            summaryMetrics = {
+                totalTrials: totalTrials,
+                overallAccuracy: overallAccuracy.toFixed(2),
+                overallMeanRT_ms: overallMeanRT.toFixed(2),
+                overallSDRT_ms: overallSDRT.toFixed(2),
+                errorRate: errorRate.toFixed(2),
+                congruentTotal: congruentTotal,
+                congruentAccuracy: congruentAccuracy.toFixed(2),
+                congruentMeanRT_ms: congruentMeanRT.toFixed(2),
+                congruentSDRT_ms: congruentSDRT.toFixed(2),
+                incongruentTotal: incongruentTotal,
+                incongruentAccuracy: incongruentAccuracy.toFixed(2),
+                incongruentMeanRT_ms: incongruentMeanRT.toFixed(2),
+                incongruentSDRT_ms: incongruentSDRT.toFixed(2),
+                interferenceRT_ms: typeof interferenceRT === 'number' ? interferenceRT.toFixed(2) : interferenceRT,
+                interferenceAccuracy: interferenceAccuracy.toFixed(2)
+            };
+
+            console.log("Summary Metrics:", summaryMetrics);
+
+            // Display summary to participant
+            summaryResultsDiv.innerHTML = `
                 <ul>
-                    <li>Accuracy: ${accuracy.toFixed(1)}% (${correctCount}/${results.length})</li>
-                    <li>Average Correct Reaction Time: ${averageRT.toFixed(1)} ms</li>
-                    ${congruentCount > 0 ? `<li>Avg. Correct Congruent RT: ${avgCongruentRT.toFixed(1)} ms</li>` : ''}
-                    ${incongruentCount > 0 ? `<li>Avg. Correct Incongruent RT: ${avgIncongruentRT.toFixed(1)} ms</li>` : ''}
+                    <li>Overall Accuracy: ${summaryMetrics.overallAccuracy}%</li>
+                    <li>Average Correct Reaction Time: ${summaryMetrics.overallMeanRT_ms} ms</li>
+                    <li>Reaction Time Interference (Incongruent - Congruent): ${summaryMetrics.interferenceRT_ms} ms</li>
+                    <li>Accuracy Interference (Congruent - Incongruent): ${summaryMetrics.interferenceAccuracy}%</li>
                 </ul>
-                <button id="restartBtn">Restart Task</button>
-            `; // Overwrite innerHTML including the button
+            `;
+            summaryDiv.classList.remove('hidden');
+        }
 
-            // Re-add event listener for the new restart button
-             const newRestartButton = document.getElementById('restartBtn');
-             if (newRestartButton) { // Check if button exists
-                 newRestartButton.addEventListener('click', () => {
-                     console.log("Restart button clicked!");
-                     summaryDiv.classList.add('hidden'); // Hide summary
-                     startExperiment(); // Start over
-                 });
-             } else {
-                 console.error("Restart button not found after summary display.");
-             }
+        // --- Function to trigger JSON download ---
+        function downloadData() {
+            const dataStr = JSON.stringify({
+                participantInfo: participantData,
+                summaryMetrics: summaryMetrics,
+                rawData: results
+            }, null, 2); // Pretty print JSON
 
+            const blob = new Blob([dataStr], {type: "application/json"});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
 
-            summaryDiv.classList.remove('hidden'); // Show summary
+            // Create filename with ID and timestamp
+             const date = new Date();
+             const timestamp = `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}_${String(date.getHours()).padStart(2, '0')}${String(date.getMinutes()).padStart(2, '0')}${String(date.getSeconds()).padStart(2, '0')}`;
+             a.download = `flanker_results_${participantData.id}_${timestamp}.json`;
+            a.href = url;
+            document.body.appendChild(a); // Append anchor to body
+            a.click(); // Simulate click to trigger download
+            document.body.removeChild(a); // Clean up anchor
+            URL.revokeObjectURL(url); // Release object URL
+            console.log("Data download initiated.");
         }
 
 
-        // --- Event Listener for the Start Button ---
-        startButton.addEventListener('click', () => {
-            console.log("Start button clicked!");
-            instructionsDiv.classList.add('hidden'); // Hide instructions
-            summaryDiv.classList.add('hidden'); // Ensure summary is hidden
-            startExperiment(); // Start the experiment
+        // --- Event Listeners ---
+
+        // Instructions -> Participant Info
+        continueToInfoBtn.addEventListener('click', () => {
+             instructionsDiv.classList.add('hidden');
+             participantInfoDiv.classList.remove('hidden');
         });
 
-        // --- Event Listener for the Restart Button (Initial one, might be replaced) ---
-        // Note: Since we rewrite the summaryDiv's innerHTML, this listener might need to be re-attached
-        // inside endExperiment() to the *new* button element. See endExperiment().
-        // restartButton.addEventListener('click', () => {
-        //     console.log("Restart button clicked!");
-        //     summaryDiv.classList.add('hidden'); // Hide summary
-        //     startExperiment(); // Start over
-        // });
+        // Participant Info Form Submission -> Start Task
+        infoForm.addEventListener('submit', (event) => {
+            event.preventDefault(); // Prevent default form submission
+            const id = participantIdInput.value;
+            const age = ageInput.value;
+            const gender = genderInput.value;
+
+            // Basic Validation
+            if (id.match(/^\d{5}$/) && age && gender) {
+                participantData = {
+                    id: id,
+                    age: parseInt(age), // Store age as number
+                    gender: gender
+                };
+                infoErrorDiv.classList.add('hidden'); // Hide error message
+                participantInfoDiv.classList.add('hidden'); // Hide form
+                startExperiment(); // Start the actual task
+            } else {
+                infoErrorDiv.textContent = "Please ensure ID is 5 digits and all fields are filled.";
+                infoErrorDiv.classList.remove('hidden'); // Show error message
+            }
+        });
+
+        // Restart Button
+        restartBtn.addEventListener('click', () => {
+            summaryDiv.classList.add('hidden');
+            // Show instructions again for a full restart loop
+            instructionsDiv.classList.remove('hidden');
+            // Clear participant data? Or go straight to info form? Let's go to info form.
+            // participantInfoDiv.classList.remove('hidden'); // <-- Option to restart from info form
+            // infoForm.reset(); // Clear previous entries
+        });
+
+        // Developer Data Download Button
+        developerDataButton.addEventListener('click', downloadData);
+
 
     </script>
-    </body>
+</body>
 </html>
