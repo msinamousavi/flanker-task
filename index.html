@@ -96,7 +96,10 @@
         </div>
 
         <div id="task" class="hidden">
-            <div id="fixation">+</div>     <div id="stimulus"></div>    <div id="feedback"></div>    </div>
+             <div id="fixation">+</div>
+             <div id="stimulus" class="hidden"></div>
+            <div id="feedback" class="hidden"></div>
+        </div>
 
         <div id="summary" class="hidden">
             <h2>Task Complete!</h2>
@@ -104,7 +107,85 @@
             <button id="restartBtn">Restart Task</button> </div>
     </div>
 
+    <script>
+        // --- Get References to HTML Elements ---
+        const startButton = document.getElementById('startBtn');
+        const instructionsDiv = document.getElementById('instructions');
+        const taskDiv = document.getElementById('task');
+        const fixationDiv = document.getElementById('fixation');
+        const stimulusDiv = document.getElementById('stimulus');
+        const feedbackDiv = document.getElementById('feedback');
+        const summaryDiv = document.getElementById('summary');
+        // You might need restartBtn later if you implement it
+        // const restartButton = document.getElementById('restartBtn');
+
+        // --- Event Listener for the Start Button ---
+        startButton.addEventListener('click', () => {
+            console.log("Start button clicked!"); // For debugging
+
+            // Hide instructions
+            instructionsDiv.classList.add('hidden');
+
+            // Show the main task area
+            taskDiv.classList.remove('hidden');
+
+            // Ensure fixation is visible and stimulus/feedback are hidden initially for the task
+            fixationDiv.classList.remove('hidden');
+            stimulusDiv.classList.add('hidden');
+            feedbackDiv.classList.add('hidden');
+            summaryDiv.classList.add('hidden'); // Ensure summary is hidden
+
+            // --- NEXT STEP: Start the actual experiment ---
+            // Call a function here to begin the sequence of trials
+            // e.g., startExperiment();
+            console.log("Task area shown, fixation should be visible.");
+            // For now, it will just show the fixation cross (+)
+        });
+
+        // --- Placeholder for the main experiment logic ---
+        // function startExperiment() {
+        //    console.log("Experiment starting...");
+        //    // Define trials (stimuli, correct answers)
+        //    // Set up trial counter
+        //    // Call function to run the first trial
+        //    // runTrial(currentTrialIndex);
+        // }
+
+        // --- Placeholder for running a single trial ---
+        // function runTrial(trialIndex) {
+        //    console.log(`Running trial ${trialIndex}`);
+        //    // 1. Show Fixation (already visible or show for specific duration)
+        //    // 2. Use setTimeout to hide fixation and show stimulus after a delay
+        //    // 3. Record stimulus onset time
+        //    // 4. Add keyboard listener (document.addEventListener('keydown', handleKeyPress))
+        //    // 5. Set a timeout for response window (if needed)
+        // }
+
+        // --- Placeholder for handling key presses ---
+        // function handleKeyPress(event) {
+        //    // Check if the key pressed is F or J
+        //    // Record reaction time
+        //    // Determine if response is correct
+        //    // Remove keyboard listener for this trial
+        //    // Show feedback
+        //    // Use setTimeout to proceed to the next trial or end experiment
+        // }
+
+        // --- Placeholder for showing feedback ---
+        // function showFeedback(correct) {
+        //    // Show feedback div
+        //    // Set text and class (correct/incorrect)
+        //    // Use setTimeout to hide feedback and start next trial/end
+        // }
+
+        // --- Placeholder for ending the experiment ---
+        // function endExperiment() {
+        //    // Hide task div
+        //    // Calculate summary statistics (accuracy, avg RT)
+        //    // Display summary statistics in the summary div
+        //    // Show summary div
+        // }
+
+    </script>
     </body>
 </html>
-
-
