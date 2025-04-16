@@ -483,7 +483,10 @@
 
 
         // --- Event Listeners (Updated for new download buttons) ---
-        continueToInfoBtn.addEventListener('click', () => { /* ... */ });
+        continueToInfoBtn.addEventListener('click', () => {
+    welcomeDiv.classList.add('hidden');     // Hide welcome screen
+    participantInfoDiv.classList.remove('hidden');  // Show participant info screen
+});
         infoForm.addEventListener('submit', (event) => { /* ... */ });
         restartBtn.addEventListener('click', () => { /* ... */ });
 
