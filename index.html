@@ -534,18 +534,25 @@
 </html>
 
 
-const postData = {
-  participantID: "Sina123",
-  trials: trialDataArray,  // Each item has trial, stimulus, response, correct, rt
-  accuracy: 89,
-  avgRT: 460
-};
+<script>
+  function sendDataToSheet(participantID, trialDataArray, accuracy, avgRT) {
+    const postData = {
+      participantID: participantID,
+      trials: trialDataArray,
+      accuracy: accuracy,
+      avgRT: avgRT
+    };
 
-fetch("YOUR_WEB_APP_URL_HERE", {
-  method: "POST",
-  body: JSON.stringify(postData),
-  headers: {
-    "Content-Type": "application/json"
+    fetch("YOUR_WEB_APP_URL_HERE", {
+      method: "POST",
+      body: JSON.stringify(postData),
+      headers: {
+        "Content-Type": "application/json"
+      }
+    })
+    .then(response => console.log("Data sent to Google Sheet"))
+    .catch(error => console.error("Error sending data:", error));
   }
-});
+</script>
+
 
