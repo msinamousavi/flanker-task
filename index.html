@@ -444,6 +444,12 @@
                 </ul>
             `;
             summaryDiv.classList.remove('hidden');
+            sendDataToSheet(
+              participantData.id,
+              results,
+              summaryMetrics.overallAccuracy,
+              summaryMetrics.overallMeanRT_ms
+            );
         }
 
          // --- Function to Convert Data to CSV ---
@@ -536,23 +542,25 @@
 
 <script>
   function sendDataToSheet(participantID, trialDataArray, accuracy, avgRT) {
-    const postData = {
+    const data = {
       participantID: participantID,
-      trials: trialDataArray,
+      trialData: trialDataArray,
       accuracy: accuracy,
-      avgRT: avgRT
+      averageRT: avgRT
     };
 
-    fetch("YOUR_WEB_APP_URL_HERE", {
+    fetch("https://script.google.com/macros/s/AKfycbymjapc5sya9P9xXTjDnD5vO7o7ooA0-ORXuMP6to9CcaL_O3MEH87EiALNOlEv_jO5Sw/exec", {
       method: "POST",
-      body: JSON.stringify(postData),
+      mode: "no-cors",
       headers: {
-        "Content-Type": "application/json"
-      }
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
     })
-    .then(response => console.log("Data sent to Google Sheet"))
-    .catch(error => console.error("Error sending data:", error));
+    .then(() => console.log("✅ Data sent to Google Sheet"))
+    .catch((error) => console.error("❌ Error sending data:", error));
   }
 </script>
+
 
 
