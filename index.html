@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Flanker Task (Revised)</title>
+    <title>Flanker Task (Spacing & Noise)</title>
     <style>
         /* Basic CSS */
         body {
@@ -19,33 +19,45 @@
         #stimulus, #fixation {
             font-size: 80px; font-family: 'Courier New', Courier, monospace; margin: 40px 0;
             height: 90px; line-height: 90px; color: #333;
+            /* Ensure whitespace is preserved for spacing */
+            white-space: pre;
         }
         #fixation { font-size: 50px; }
 
-        /* Noise Overlay Styling */
+        /* Noise Overlay Styling - Slightly more visible */
         #noiseOverlay {
             position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-            /* Example subtle noise pattern */
-            background-image: radial-gradient(circle, rgba(0,0,0,0.08) 1px, transparent 1px);
-            background-size: 4px 4px; /* Adjust pattern density */
-            opacity: 0.6; /* Adjust visibility */
-            pointer-events: none; /* Ignore mouse events */
-            z-index: 10; /* Position above stimulus if needed */
+            /* Example noise pattern - denser */
+            background-image: radial-gradient(circle, rgba(0,0,0,0.12) 1px, transparent 1px);
+            background-size: 3px 3px; /* Smaller size = denser pattern */
+            opacity: 0.6;
+            pointer-events: none;
+            z-index: 10;
         }
 
-        button { /* Styles from previous version... */ }
+        button {
+             padding: 12px 24px; font-size: 18px; margin-top: 25px; cursor: pointer;
+             background-color: #007bff; color: white; border: none; border-radius: 5px;
+             transition: background-color 0.2s ease;
+         }
         button:hover { background-color: #0056b3; }
         .hidden { display: none; }
-        #summary ul, #instructions ul, #participantInfo form { /* Styles from previous version... */ }
-        #summary li, #instructions li, #participantInfo label, #participantInfo input, #participantInfo select { /* Styles from previous version... */ }
-        #participantInfo input, #participantInfo select { /* Styles from previous version... */ }
-        #participantInfo label { /* Styles from previous version... */ }
-        #feedback { /* Styles from previous version... */ }
+        #summary ul, #instructions ul, #participantInfo form {
+             display: inline-block; text-align: left; margin-top: 15px; margin-bottom: 15px;
+         }
+        #summary li, #instructions li, #participantInfo label, #participantInfo input, #participantInfo select {
+             margin-bottom: 10px; display: block; font-size: 16px;
+         }
+         #participantInfo input, #participantInfo select {
+             padding: 8px; margin-left: 5px; min-width: 150px;
+         }
+         #participantInfo label { font-weight: bold; }
+        #feedback { font-size: 24px; font-weight: bold; margin-top: 15px; height: 30px; }
         .correct { color: green; }
         .incorrect { color: red; }
-        .error-message { /* Styles from previous version... */ }
-        #developerDataButton { /* Styles from previous version... */ }
-        #developerDataButton:hover { /* Styles from previous version... */ }
+        .error-message { color: red; font-size: 14px; margin-top: 10px; }
+        #developerDataButton { background-color: #28a745; margin-left: 15px; } /* Green for CSV download */
+        #developerDataButton:hover { background-color: #218838; }
     </style>
 </head>
 <body>
@@ -56,8 +68,9 @@
             <p>You will first be asked for some basic information.</p>
             <p>Keep your eyes focused on the center of the screen.</p>
             <p>A fixation cross '+' will appear, followed by a sequence of 5 letters.</p>
+            <p>The letters may appear close together or further apart.</p>
             <p>Some trials may have visual noise overlaying the letters.</p>
-            <p>Your task is to identify the <strong>center letter</strong> and ignore the surrounding letters.</p>
+            <p>Your task is to identify the <strong>center letter</strong> and ignore the surrounding letters and any noise or spacing.</p>
             <ul id="instructionList">
                  <li>Press <strong>F</strong> if the center letter is <strong>A</strong> or <strong>K</strong></li>
                  <li>Press <strong>J</strong> if the center letter is <strong>L</strong> or <strong>R</strong></li>
@@ -68,8 +81,8 @@
         </div>
 
         <div id="participantInfo" class="hidden">
-            <h2>Participant Information</h2>
-            <form id="infoForm">
+             <h2>Participant Information</h2>
+             <form id="infoForm">
                  <label for="participantId">Participant ID (5 digits):</label>
                  <input type="text" id="participantId" name="participantId" pattern="\d{5}" required maxlength="5" title="Enter exactly 5 digits">
                  <label for="age">Age:</label>
@@ -85,13 +98,12 @@
                  </select>
                  <button type="submit" id="startTaskBtn">Start Task</button>
                  <div id="infoError" class="error-message hidden">Please fill out all fields correctly.</div>
-            </form>
+             </form>
         </div>
 
         <div id="task" class="hidden">
             <div id="noiseOverlay" class="hidden"></div> <div id="fixation">+</div>
-            <div id="stimulus" class="hidden"></div>
-            <div id="feedback" class="hidden"></div>
+            <div id="stimulus" class="hidden"></div> <div id="feedback" class="hidden"></div>
         </div>
 
         <div id="summary" class="hidden">
@@ -100,15 +112,13 @@
              <div id="summaryResults">
                  </div>
              <button id="restartBtn">Restart Task</button>
-             <button id="developerDataButton">Download Raw Data (JSON)</button>
-        </div>
+             <button id="developerDataButton">Download Raw Data (CSV)</button> </div>
     </div>
 
     <script>
-        // --- Get References (Add noiseOverlay) ---
+        // --- Get References ---
         const continueToInfoBtn = document.getElementById('continueToInfoBtn');
         const instructionsDiv = document.getElementById('instructions');
-        // ... (references from provided code) ...
         const participantInfoDiv = document.getElementById('participantInfo');
         const infoForm = document.getElementById('infoForm');
         const participantIdInput = document.getElementById('participantId');
@@ -120,12 +130,11 @@
         const fixationDiv = document.getElementById('fixation');
         const stimulusDiv = document.getElementById('stimulus');
         const feedbackDiv = document.getElementById('feedback');
-        const noiseOverlay = document.getElementById('noiseOverlay'); // Added noise overlay ref
+        const noiseOverlay = document.getElementById('noiseOverlay');
         const summaryDiv = document.getElementById('summary');
         const summaryResultsDiv = document.getElementById('summaryResults');
         const restartBtn = document.getElementById('restartBtn');
-        const developerDataButton = document.getElementById('developerDataButton');
-
+        const developerDataButton = document.getElementById('developerDataButton'); // Button now downloads CSV
 
         // --- Task State Variables ---
         let trials = [];
@@ -134,6 +143,7 @@
         let summaryMetrics = {};
         let participantData = {};
         let stimulusStartTime;
+        let experimentStartTime; // To calculate total elapsed time
         let responseListener = null;
 
         // --- Timing Parameters ---
@@ -142,27 +152,41 @@
         const ITI = 500;
 
         // --- Utility Functions ---
-        function shuffleArray(array) { /* ... (same as provided) ... */ }
-        // Updated SD to use Sample SD (N-1)
-        function calculateSD(data, mean) {
-            if (!data || data.length < 2) return 0; // Need at least 2 points for sample SD
-            const N = data.length;
-            const variance = data.reduce((sum, value) => sum + Math.pow(value - mean, 2), 0) / (N - 1);
-            return Math.sqrt(variance);
-        }
-         // Added Median calculation
-         function calculateMedian(data) {
-             if (!data || data.length === 0) return 0;
-             const sortedData = [...data].sort((a, b) => a - b); // Sort numeric
-             const mid = Math.floor(sortedData.length / 2);
-             if (sortedData.length % 2 === 0) { // Even length
-                 return (sortedData[mid - 1] + sortedData[mid]) / 2;
-             } else { // Odd length
-                 return sortedData[mid];
+        function shuffleArray(array) {
+             for (let i = array.length - 1; i > 0; i--) {
+                 const j = Math.floor(Math.random() * (i + 1));
+                 [array[i], array[j]] = [array[j], array[i]];
              }
+             return array;
          }
+        function calculateSD(data, mean) {
+             if (!data || data.length < 2) return 0;
+             const N = data.length;
+             const variance = data.reduce((sum, value) => sum + Math.pow(value - mean, 2), 0) / (N - 1);
+             return Math.sqrt(variance);
+         }
+        function calculateMedian(data) {
+             if (!data || data.length === 0) return 0;
+             const sortedData = [...data].sort((a, b) => a - b);
+             const mid = Math.floor(sortedData.length / 2);
+             return sortedData.length % 2 === 0 ? (sortedData[mid - 1] + sortedData[mid]) / 2 : sortedData[mid];
+         }
+        // Helper to format stimulus with spacing using non-breaking spaces
+        function formatStimulusWithSpacing(stimulusString, spacingType) {
+            const letters = stimulusString.split('');
+            let space = '';
+            switch (spacingType) {
+                case 'double': space = '\u00A0'; break; // One non-breaking space
+                case 'triple': space = '\u00A0\u00A0'; break; // Two non-breaking spaces
+                case 'single': // Fallthrough intentional
+                default:       space = ''; break; // No extra space for single
+            }
+            // Join with the calculated space ONLY between letters
+            return letters.join(space);
+        }
 
-        // --- Define Trials (96 trials: 2 Congruency x 2 Noise x 2 Target Sets x 12 Reps) ---
+
+        // --- Define Trials (96 trials: 2 Cong x 2 Noise x 3 Spacing x 2 Target Sets x 4 Reps) ---
         function setupTrials() {
             const letters = {
                 set1: ['A', 'K'], // Respond 'F'
@@ -170,50 +194,48 @@
             };
             const conditions = {
                 congruency: ['congruent', 'incongruent'],
-                noise: ['no', 'yes']
+                noise: ['no', 'yes'],
+                spacing: ['single', 'double', 'triple'] // Added spacing
             };
 
             const baseTrials = [];
             // Create 1 instance of each unique condition combo
             for (const cong of conditions.congruency) {
                 for (const noiseType of conditions.noise) {
-                    // Create trials for both target sets (A/K vs L/R)
-                    for (const targetSetKey in letters) {
-                         const targetSet = letters[targetSetKey];
-                         const flankerSet = targetSetKey === 'set1' ? letters.set2 : letters.set1;
-                         const correctKey = targetSetKey === 'set1' ? 'f' : 'j';
+                    for (const spacingType of conditions.spacing) { // Loop through spacing
+                        for (const targetSetKey in letters) {
+                            const targetSet = letters[targetSetKey];
+                            const flankerSet = targetSetKey === 'set1' ? letters.set2 : letters.set1;
+                            const correctKey = targetSetKey === 'set1' ? 'f' : 'j';
+                            const targetLetter = targetSet[Math.floor(Math.random() * targetSet.length)];
 
-                         // Pick target letter from the set (can alternate or be random)
-                         const targetLetter = targetSet[Math.floor(Math.random() * targetSet.length)];
+                            let stimulusString = ""; // Raw string without extra spaces
+                            if (cong === 'congruent') {
+                                stimulusString = targetLetter.repeat(5);
+                            } else {
+                                const flankerLetter = flankerSet[Math.floor(Math.random() * flankerSet.length)];
+                                stimulusString = `${flankerLetter}${flankerLetter}${targetLetter}${flankerLetter}${flankerLetter}`;
+                            }
 
-                         let stimulus = "";
-                         if (cong === 'congruent') {
-                             // Center is target, flankers match target
-                             stimulus = targetLetter.repeat(5);
-                         } else { // incongruent
-                             // Center is target, flankers are from the *other* response set
-                             const flankerLetter = flankerSet[Math.floor(Math.random() * flankerSet.length)];
-                             stimulus = `${flankerLetter}${flankerLetter}${targetLetter}${flankerLetter}${flankerLetter}`;
-                         }
-
-                         baseTrials.push({
-                             stimulus: stimulus,
-                             centerLetter: targetLetter, // Store the specific center letter
-                             correctKey: correctKey, // Store the correct key ('f' or 'j')
-                             condition_congruency: cong,
-                             condition_noise: noiseType
-                         });
-                    } // End target set loop
+                            baseTrials.push({
+                                stimulus_base: stimulusString, // Store base string
+                                centerLetter: targetLetter,
+                                correctKey: correctKey,
+                                condition_congruency: cong,
+                                condition_noise: noiseType,
+                                condition_spacing: spacingType // Store spacing condition
+                            });
+                        } // End target set loop
+                    } // End spacing loop
                 } // End noise loop
             } // End congruency loop
 
-            // Repeat the unique conditions to get 96 trials (8 unique types * 12 reps)
-             const repeatedTrials = [];
-             const reps = 12;
-             for (let i=0; i<reps; i++){
-                // Add copies of base trials
+            // Repeat the unique conditions to get 96 trials (24 unique types * 4 reps)
+            const repeatedTrials = [];
+            const reps = 4;
+            for (let i = 0; i < reps; i++) {
                 repeatedTrials.push(...baseTrials.map(trial => ({...trial})));
-             }
+            }
 
             trials = shuffleArray(repeatedTrials);
             currentTrialIndex = 0;
@@ -222,10 +244,19 @@
         }
 
 
-        // --- Start Experiment Flow (Same as provided) ---
-        function startExperiment() { /* ... */ }
+        // --- Start Experiment Flow ---
+        function startExperiment() {
+            console.log("Starting experiment for participant:", participantData);
+            experimentStartTime = performance.now(); // Record experiment start time
+            setupTrials();
+            if (trials.length > 0) {
+                runTrial(currentTrialIndex);
+            } else {
+                console.error("No trials defined!");
+            }
+        }
 
-        // --- Run a Single Trial (Integrate Noise) ---
+        // --- Run a Single Trial (Integrate Noise and Spacing Display) ---
         function runTrial(trialIndex) {
             if (trialIndex >= trials.length) {
                 endExperiment(); return;
@@ -236,26 +267,31 @@
             taskDiv.classList.remove('hidden');
             stimulusDiv.classList.add('hidden');
             feedbackDiv.classList.add('hidden');
-            noiseOverlay.classList.add('hidden'); // Make sure noise is hidden
+            noiseOverlay.classList.add('hidden');
             fixationDiv.textContent = '+';
             fixationDiv.classList.remove('hidden');
 
             // Show fixation, then stimulus after delay
             setTimeout(() => {
-                fixationDiv.classList.add('hidden'); // Hide fixation
+                fixationDiv.classList.add('hidden');
 
-                // Prepare and show stimulus
-                stimulusDiv.textContent = currentTrial.stimulus;
+                // Format stimulus with appropriate spacing
+                const formattedStimulus = formatStimulusWithSpacing(
+                    currentTrial.stimulus_base,
+                    currentTrial.condition_spacing
+                );
+                // Use innerHTML to render spaces correctly
+                stimulusDiv.innerHTML = formattedStimulus;
                 stimulusDiv.classList.remove('hidden');
 
-                // Show noise if it's a noise trial
+                // Show noise if applicable
                 if (currentTrial.condition_noise === 'yes') {
                     noiseOverlay.classList.remove('hidden');
                 }
 
-                stimulusStartTime = performance.now(); // Record time
+                stimulusStartTime = performance.now();
 
-                // Add keyboard listener
+                // Add listener
                 if (responseListener) document.removeEventListener('keydown', responseListener);
                 responseListener = (event) => handleKeyPress(event, currentTrial);
                 document.addEventListener('keydown', responseListener);
@@ -267,40 +303,35 @@
         function handleKeyPress(event, trial) {
             const key = event.key.toLowerCase();
             if (key === 'f' || key === 'j') {
-                 const reactionTime = performance.now() - stimulusStartTime;
+                 const reactionTime = performance.now() - stimulusStartTime; // This is latency
 
-                 // Determine correct key based on the center letter
                  let expectedKey;
                  const centerLower = trial.centerLetter.toLowerCase();
-                 if (['a', 'k'].includes(centerLower)) {
-                     expectedKey = 'f';
-                 } else if (['l', 'r'].includes(centerLower)) {
-                     expectedKey = 'j';
-                 } else {
-                     expectedKey = '?'; // Fallback, should not occur
-                     console.error("Error determining expected key for center letter:", trial.centerLetter);
-                 }
+                 if (['a', 'k'].includes(centerLower)) expectedKey = 'f';
+                 else if (['l', 'r'].includes(centerLower)) expectedKey = 'j';
+                 else expectedKey = '?';
                  const correct = key === expectedKey;
 
                  document.removeEventListener('keydown', responseListener);
                  responseListener = null;
                  stimulusDiv.classList.add('hidden');
-                 noiseOverlay.classList.add('hidden'); // Hide noise overlay after response
+                 noiseOverlay.classList.add('hidden');
 
-                 // Store results with new fields
+                 // Store results including spacing and using "latency_ms" for RT
                  results.push({
                      participantId: participantData.id,
                      age: participantData.age,
                      gender: participantData.gender,
                      trialIndex: currentTrialIndex,
-                     stimulus: trial.stimulus,
+                     stimulus: trial.stimulus_base, // Store base stimulus
                      centerLetter: trial.centerLetter,
-                     congruency: trial.condition_congruency, // Keep field names consistent
-                     noise: trial.condition_noise,          // Keep field names consistent
+                     congruency: trial.condition_congruency,
+                     noise: trial.condition_noise,
+                     spacing: trial.condition_spacing, // Store spacing
                      response: key,
                      correctKey: expectedKey,
-                     correct: correct ? 1 : 0,
-                     rt: reactionTime
+                     correct: correct ? 1 : 0, // Store 0 for incorrect, 1 for correct
+                     latency_ms: reactionTime // Store latency (RT)
                  });
 
                  showFeedback(correct);
@@ -312,168 +343,160 @@
             }
         }
 
-        // --- Show Feedback (Same as provided) ---
-        function showFeedback(correct) { /* ... */ }
+        // --- Show Feedback ---
+        function showFeedback(correct) {
+             feedbackDiv.classList.remove('hidden');
+             feedbackDiv.className = correct ? 'correct' : 'incorrect';
+             feedbackDiv.textContent = correct ? "Correct" : "Incorrect";
+         }
 
-        // --- End Experiment (Add Min/Max/Median RT calculation) ---
+
+        // --- End Experiment (Calculate metrics by Noise/Spacing) ---
         function endExperiment() {
-            console.log("Experiment ended. Calculating metrics...");
-            taskDiv.classList.add('hidden');
+             const experimentEndTime = performance.now();
+             const totalElapsedTime_ms = experimentEndTime - experimentStartTime;
+             console.log("Experiment ended. Calculating metrics...");
+             taskDiv.classList.add('hidden');
 
-            // --- Calculations ---
-            let correctCount = 0;
-            let totalCorrectRT = 0;
-            let correctRTs = []; // Array for Min/Max/Median/SD calculation
+             // --- Calculations ---
+             let correctCount = 0;
+             let totalCorrectRT = 0;
+             let correctRTs = [];
 
-            let congruentCorrectCount = 0;
-            let incongruentCorrectCount = 0;
-            let congruentTotal = 0;
-            let incongruentTotal = 0;
-            let congruentCorrectRTtotal = 0;
-            let incongruentCorrectRTtotal = 0;
-            let congruentCorrectRTs = [];
-            let incongruentCorrectRTs = [];
-            // Can add counters/arrays for Noise conditions here if needed for breakdown
+             let noiseYesCorrect = 0, noiseYesTotal = 0;
+             let noiseNoCorrect = 0, noiseNoTotal = 0;
+             let spacingSingleCorrect = 0, spacingSingleTotal = 0;
+             let spacingDoubleCorrect = 0, spacingDoubleTotal = 0;
+             let spacingTripleCorrect = 0, spacingTripleTotal = 0;
+             // Add congruency counters back if needed for summary (removed for brevity, still calculable from raw data)
 
-            results.forEach(res => {
-                // Use the 'congruency' field name used in results.push
-                if (res.congruency === 'congruent') congruentTotal++;
-                if (res.congruency === 'incongruent') incongruentTotal++;
+             results.forEach(res => {
+                 // --- Noise totals ---
+                 if (res.noise === 'yes') noiseYesTotal++;
+                 else noiseNoTotal++;
+                 // --- Spacing totals ---
+                 if (res.spacing === 'single') spacingSingleTotal++;
+                 else if (res.spacing === 'double') spacingDoubleTotal++;
+                 else if (res.spacing === 'triple') spacingTripleTotal++;
 
-                if (res.correct === 1) {
-                    correctCount++;
-                    totalCorrectRT += res.rt;
-                    correctRTs.push(res.rt); // Collect all correct RTs
+                 // --- Correct counts ---
+                 if (res.correct === 1) {
+                     correctCount++;
+                     totalCorrectRT += res.latency_ms;
+                     correctRTs.push(res.latency_ms);
 
-                    if (res.congruency === 'congruent') {
-                        congruentCorrectCount++;
-                        congruentCorrectRTtotal += res.rt;
-                        congruentCorrectRTs.push(res.rt);
-                    } else if (res.congruency === 'incongruent') {
-                        incongruentCorrectCount++;
-                        incongruentCorrectRTtotal += res.rt;
-                        incongruentCorrectRTs.push(res.rt);
-                    }
-                     // Can add logic here to collect RTs based on 'noise' field if needed
-                }
-            });
+                     // Correct counts by condition
+                     if (res.noise === 'yes') noiseYesCorrect++;
+                     else noiseNoCorrect++;
+
+                     if (res.spacing === 'single') spacingSingleCorrect++;
+                     else if (res.spacing === 'double') spacingDoubleCorrect++;
+                     else if (res.spacing === 'triple') spacingTripleCorrect++;
+                 }
+             });
 
              const totalTrials = results.length;
              const overallAccuracy = totalTrials > 0 ? (correctCount / totalTrials) * 100 : 0;
              const overallMeanRT = correctCount > 0 ? (totalCorrectRT / correctCount) : 0;
-             const overallSDRT = calculateSD(correctRTs, overallMeanRT); // Use sample SD
-             const errorRate = 100 - overallAccuracy;
-
-             // Calculate NEW Overall RT Metrics
+             const overallSDRT = calculateSD(correctRTs, overallMeanRT);
              const overallMinRT = correctRTs.length > 0 ? Math.min(...correctRTs) : 0;
              const overallMaxRT = correctRTs.length > 0 ? Math.max(...correctRTs) : 0;
              const overallMedianRT = calculateMedian(correctRTs);
+             const overallErrorRate = 100 - overallAccuracy;
 
-             // Congruency calculations (same as provided code, using correct field name 'congruency')
-             const congruentAccuracy = congruentTotal > 0 ? (congruentCorrectCount / congruentTotal) * 100 : 0;
-             const incongruentAccuracy = incongruentTotal > 0 ? (incongruentCorrectCount / incongruentTotal) * 100 : 0;
-             const congruentMeanRT = congruentCorrectCount > 0 ? (congruentCorrectRTtotal / congruentCorrectCount) : 0;
-             const incongruentMeanRT = incongruentCorrectCount > 0 ? (incongruentCorrectRTtotal / incongruentCorrectCount) : 0;
-             const congruentSDRT = calculateSD(congruentCorrectRTs, congruentMeanRT);
-             const incongruentSDRT = calculateSD(incongruentCorrectRTs, incongruentMeanRT);
-             const interferenceRT = (congruentMeanRT > 0 && incongruentMeanRT > 0) ? (incongruentMeanRT - congruentMeanRT) : 'N/A';
-             const interferenceAccuracy = (congruentAccuracy - incongruentAccuracy);
+             // Calculate accuracy percentages by condition
+             const accuracyNoiseYes = noiseYesTotal > 0 ? (noiseYesCorrect / noiseYesTotal) * 100 : 0;
+             const accuracyNoiseNo = noiseNoTotal > 0 ? (noiseNoCorrect / noiseNoTotal) * 100 : 0;
+             const accuracySpacingSingle = spacingSingleTotal > 0 ? (spacingSingleCorrect / spacingSingleTotal) * 100 : 0;
+             const accuracySpacingDouble = spacingDoubleTotal > 0 ? (spacingDoubleCorrect / spacingDoubleTotal) * 100 : 0;
+             const accuracySpacingTriple = spacingTripleTotal > 0 ? (spacingTripleCorrect / spacingTripleTotal) * 100 : 0;
 
 
-            // Store calculated metrics (add new ones)
+            // Store summary metrics (can add more breakdowns here)
             summaryMetrics = {
+                totalElapsedTime_s: (totalElapsedTime_ms / 1000).toFixed(2),
                 totalTrials: totalTrials,
                 overallAccuracy: overallAccuracy.toFixed(2),
+                overallErrorRate: overallErrorRate.toFixed(2), // Percent error
                 overallMeanRT_ms: overallMeanRT.toFixed(2),
-                overallMedianRT_ms: overallMedianRT.toFixed(2), // Added Median
-                overallMinRT_ms: overallMinRT.toFixed(2),       // Added Min
-                overallMaxRT_ms: overallMaxRT.toFixed(2),       // Added Max
-                overallSDRT_ms: overallSDRT.toFixed(2),         // Now Sample SD
-                errorRate: errorRate.toFixed(2),
-                congruentTotal: congruentTotal,
-                congruentAccuracy: congruentAccuracy.toFixed(2),
-                congruentMeanRT_ms: congruentMeanRT.toFixed(2),
-                congruentSDRT_ms: congruentSDRT.toFixed(2),
-                incongruentTotal: incongruentTotal,
-                incongruentAccuracy: incongruentAccuracy.toFixed(2),
-                incongruentMeanRT_ms: incongruentMeanRT.toFixed(2),
-                incongruentSDRT_ms: incongruentSDRT.toFixed(2),
-                interferenceRT_ms: typeof interferenceRT === 'number' ? interferenceRT.toFixed(2) : interferenceRT,
-                interferenceAccuracy: interferenceAccuracy.toFixed(2)
-                // Add metrics for Noise condition breakdown if calculated
+                overallMedianRT_ms: overallMedianRT.toFixed(2),
+                overallMinRT_ms: overallMinRT.toFixed(2),
+                overallMaxRT_ms: overallMaxRT.toFixed(2),
+                overallSDRT_ms: overallSDRT.toFixed(2),
+                accuracyNoiseYes: accuracyNoiseYes.toFixed(2),
+                accuracyNoiseNo: accuracyNoiseNo.toFixed(2),
+                accuracySpacingSingle: accuracySpacingSingle.toFixed(2),
+                accuracySpacingDouble: accuracySpacingDouble.toFixed(2),
+                accuracySpacingTriple: accuracySpacingTriple.toFixed(2),
+                // Add congruency metrics back if desired
             };
 
-            console.log("Summary Metrics:", summaryMetrics);
-
-            // Display summary to participant (add Median, Min, Max)
+            // Display updated summary to participant
             summaryResultsDiv.innerHTML = `
                 <ul>
-                    <li>Overall Accuracy: ${summaryMetrics.overallAccuracy}%</li>
-                    <li>Mean Correct Reaction Time: ${summaryMetrics.overallMeanRT_ms} ms</li>
-                    <li>Median Correct Reaction Time: ${summaryMetrics.overallMedianRT_ms} ms</li>
-                    <li>Correct RT Range (Min-Max): ${summaryMetrics.overallMinRT_ms} - ${summaryMetrics.overallMaxRT_ms} ms</li>
-                    <li>RT Standard Deviation: ${summaryMetrics.overallSDRT_ms} ms</li>
-                    <li>Flanker RT Interference: ${summaryMetrics.interferenceRT_ms} ms</li>
+                    <li>Total Task Time: ${summaryMetrics.totalElapsedTime_s} seconds</li>
+                    <li>Overall Accuracy: ${summaryMetrics.overallAccuracy}% (${correctCount}/${totalTrials})</li>
+                    <li>Mean Correct Latency: ${summaryMetrics.overallMeanRT_ms} ms</li>
+                    <li>Median Correct Latency: ${summaryMetrics.overallMedianRT_ms} ms</li>
+                    <li>Latency Range (Min-Max): ${summaryMetrics.overallMinRT_ms} - ${summaryMetrics.overallMaxRT_ms} ms</li>
+                    <li>Accuracy (No Noise / Noise): ${summaryMetrics.accuracyNoiseNo}% / ${summaryMetrics.accuracyNoiseYes}%</li>
+                    <li>Accuracy (Single / Double / Triple Spacing): ${summaryMetrics.accuracySpacingSingle}% / ${summaryMetrics.accuracySpacingDouble}% / ${summaryMetrics.accuracySpacingTriple}%</li>
                 </ul>
             `;
             summaryDiv.classList.remove('hidden');
         }
 
-        // --- Function to trigger JSON download (Same as provided) ---
-        function downloadData() { /* ... (same as provided) ... */ }
+         // --- Function to Convert Data to CSV ---
+         function convertToCSV(dataArray) {
+             if (!dataArray || dataArray.length === 0) return "";
+             const headers = Object.keys(dataArray[0]);
+             const csvRows = [ headers.join(',') ]; // Header row
 
-
-        // --- Event Listeners (Same as provided) ---
-        continueToInfoBtn.addEventListener('click', () => { /* ... */ });
-        infoForm.addEventListener('submit', (event) => { /* ... */ });
-        restartBtn.addEventListener('click', () => { /* ... */ });
-        developerDataButton.addEventListener('click', downloadData);
-
-         // --- Utility Functions Implementation (need to be defined) ---
-         function shuffleArray(array) {
-             for (let i = array.length - 1; i > 0; i--) {
-                 const j = Math.floor(Math.random() * (i + 1));
-                 [array[i], array[j]] = [array[j], array[i]]; // Swap elements
-             }
-             return array;
+             dataArray.forEach(row => {
+                 // Map values in order, escape commas/quotes if necessary (simple case)
+                 const values = headers.map(header => {
+                     let value = row[header];
+                     // Basic escaping for values containing commas or quotes
+                     if (typeof value === 'string' && (value.includes(',') || value.includes('"') || value.includes('\n'))) {
+                         value = `"${value.replace(/"/g, '""')}"`; // Escape quotes by doubling them, enclose in quotes
+                     }
+                     return value;
+                 });
+                 csvRows.push(values.join(','));
+             });
+             return csvRows.join('\n');
          }
-         // Make sure all functions referenced (like startExperiment) are defined
-         // (Copying from provided code for completeness)
-         function startExperiment() {
-             console.log("Starting experiment for participant:", participantData);
-             setupTrials();
-             if (trials.length > 0) {
-                 runTrial(currentTrialIndex);
-             } else {
-                 console.error("No trials defined!");
-             }
-         }
-         function downloadData() {
-             const dataStr = JSON.stringify({
-                 participantInfo: participantData,
-                 summaryMetrics: summaryMetrics,
-                 rawData: results // Ensure 'results' contains the detailed trial data
-             }, null, 2);
 
-             const blob = new Blob([dataStr], {type: "application/json"});
-             const url = URL.createObjectURL(blob);
-             const a = document.createElement('a');
-             const date = new Date();
-             const timestamp = `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}_${String(date.getHours()).padStart(2, '0')}${String(date.getMinutes()).padStart(2, '0')}${String(date.getSeconds()).padStart(2, '0')}`;
-             a.download = `flanker_results_${participantData.id}_${timestamp}.json`;
-             a.href = url;
-             document.body.appendChild(a);
-             a.click();
-             document.body.removeChild(a);
-             URL.revokeObjectURL(url);
-             console.log("JSON Data download initiated.");
-         }
-         // Event Listeners (Copied from provided for completeness)
-         continueToInfoBtn.addEventListener('click', () => {
+        // --- Function to trigger CSV Download ---
+        function downloadCSVData() {
+            const csvData = convertToCSV(results); // Convert raw results to CSV
+            if (!csvData) {
+                console.error("No data available to download.");
+                alert("No data available to download.");
+                return;
+            }
+
+            const blob = new Blob([csvData], {type: "text/csv;charset=utf-8;"});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            const date = new Date();
+            const timestamp = `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}_${String(date.getHours()).padStart(2, '0')}${String(date.getMinutes()).padStart(2, '0')}${String(date.getSeconds()).padStart(2, '0')}`;
+            a.download = `flanker_raw_data_${participantData.id}_${timestamp}.csv`; // Filename indicates raw data
+            a.href = url;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            console.log("CSV Data download initiated.");
+        }
+
+
+        // --- Event Listeners ---
+        continueToInfoBtn.addEventListener('click', () => {
              instructionsDiv.classList.add('hidden');
              participantInfoDiv.classList.remove('hidden');
          });
-         infoForm.addEventListener('submit', (event) => {
+        infoForm.addEventListener('submit', (event) => {
              event.preventDefault();
              const id = participantIdInput.value;
              const age = ageInput.value;
@@ -482,17 +505,29 @@
                  participantData = { id: id, age: parseInt(age), gender: gender };
                  infoErrorDiv.classList.add('hidden');
                  participantInfoDiv.classList.add('hidden');
-                 startExperiment();
+                 startExperiment(); // Calls the function that now records start time
              } else {
                  infoErrorDiv.textContent = "Please ensure ID is 5 digits and all fields are filled.";
                  infoErrorDiv.classList.remove('hidden');
              }
          });
-         restartBtn.addEventListener('click', () => {
+        restartBtn.addEventListener('click', () => {
              summaryDiv.classList.add('hidden');
-             instructionsDiv.classList.remove('hidden');
+             instructionsDiv.classList.remove('hidden'); // Go back to start
          });
-         developerDataButton.addEventListener('click', downloadData);
+        // Developer button now triggers CSV download
+        developerDataButton.addEventListener('click', downloadCSVData);
+
+        // --- Utility function implementations (need to be defined) ---
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+        // Make sure other functions are defined if needed
+        // (startExperiment is defined above)
 
     </script>
 </body>
