@@ -454,13 +454,30 @@
                  </ul>`;
              summaryDiv.classList.remove('hidden');
 
-             // <<< Your Google Form Submission Call - UNALTERED >>>
-             sendDataToSheet(
-                 participantData.id,
-                 results,
-                 summaryMetrics.overallAccuracy, // Send overall accuracy (incl. timeouts)
-                 summaryMetrics.overallMeanRT_ms // Send mean RT for correct responses
-             );
+             // --- Prepare Data for Google Sheet ---
+            console.log("Mapping results for Google Sheet..."); // Debug log
+            // Map the raw results to the format expected by Apps Script
+            const trialsForSheet = results.map(trial => ({
+                trial: trial.trialIndex, // Rename trialIndex to trial
+                stimulus: trial.stimulus,
+                response: trial.response,
+                correct: trial.correct,
+                rt: trial.latency_ms // Rename latency_ms to rt
+                // Only include fields the Apps Script explicitly uses
+            }));
+            
+            // Create the data payload with matching keys expected by Apps Script
+            const dataForSheet = {
+                participantID: participantData.id,
+                trials: trialsForSheet,           // Use the key 'trials'
+                accuracy: summaryMetrics.overallAccuracy,
+                avgRT: summaryMetrics.overallMeanRT_ms // Use the key 'avgRT'
+            };
+
+// Call the function to send the PREPARED data
+            console.log("Data prepared for Google Sheet:", dataForSheet); // Log the prepared data payload
+            sendDataToSheetGoogle(dataForSheet); // Call the sending function (will rename below)
+// --- End Prepare Data ---
          }
 
         // --- Convert Data to CSV (Unaltered) ---
@@ -494,23 +511,49 @@
 
     </script>
     <script>
-      function sendDataToSheet(participantID, trialDataArray, accuracy, avgRT) {
-        const data = {
-          participantID: participantID,
-          trialData: trialDataArray, // Sending raw results array
-          accuracy: accuracy,         // Sending overall accuracy (incl. timeouts)
-          averageRT: avgRT          // Sending mean RT for correct non-timeout responses
-        };
-        console.log("Attempting to send data to Google Sheet:", JSON.stringify(data).substring(0, 500) + "...");
-        fetch("https://script.google.com/macros/s/AKfycbymjapc5sya9P9xXTjDnD5vO7o7ooA0-ORXuMP6to9CcaL_O3MEH87EiALNOlEv_jO5Sw/exec", {
+// ================= GOOGLE FORM SCRIPT (Keep separate) ==================
+<script>
+  // Function renamed and simplified to accept pre-structured data
+      function sendDataToSheetGoogle(dataPayload) {
+        // Data is already structured correctly in dataPayload
+    
+        console.log("Attempting to send data via fetch:", JSON.stringify(dataPayload).substring(0, 500) + "...");
+    
+        fetch("https://script.google.com/macros/s/AKfycbymjapc5sya9P9xXTjDnD5vO7o7ooA0-ORXuMP6to9CcaL_O3MEH87EiALNOlEv_jO5Sw/exec", { // Use your exact deployment URL
           method: "POST",
-          headers: { "Content-Type": "application/json", }, // Keep as JSON unless your script expects text
-          body: JSON.stringify(data),
-          mode: 'no-cors' // Necessary for simple POST to Apps Script from browser often
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(dataPayload), // Send the correctly structured data
+          // mode: 'no-cors' // <<< REMOVED this line
         })
-        .then(() => console.log("Data submission attempted via fetch (no-cors mode). Check Google Sheet for results."))
-        .catch((error) => console.error("❌ Error initiating fetch to Google Sheet:", error));
+        // Read the response from the Apps Script
+        .then((response) => {
+          if (!response.ok) { // Check for server errors (status code 4xx, 5xx)
+               // Try to read error text for more info
+               return response.text().then(text => {
+                   console.error(`Error response from server: ${response.status} ${response.statusText}`, text);
+                   throw new Error(`Server error: ${response.status} ${response.statusText} - ${text}`);
+               });
+          }
+          return response.text(); // Get response text if OK (expecting "Success")
+        })
+        .then((text) => {
+          console.log("Server response text:", text); // Log the actual response
+          if (text && text.trim().toLowerCase() === 'success') {
+               console.log("Google Sheet submission appears successful.");
+          } else {
+               console.warn("Server response did not indicate clear success:", text);
+          }
+        })
+        .catch((error) => {
+          // Catches network errors or errors thrown from .then() blocks
+          console.error("❌ Error sending data via fetch:", error);
+          // Optionally alert the user
+          // alert("An error occurred while sending data. Please check the console (F12).");
+        });
       }
     </script>
+// ================= END GOOGLE FORM SCRIPT ==================
     </body>
 </html>
