@@ -514,44 +514,36 @@
 <script>
   // Function renamed and simplified to accept pre-structured data
       function sendDataToSheetGoogle(dataPayload) {
-        // Data is already structured correctly in dataPayload
-    
-        console.log("Attempting to send data via fetch:", JSON.stringify(dataPayload).substring(0, 500) + "...");
-    
-        fetch("https://script.google.com/macros/s/AKfycbymjapc5sya9P9xXTjDnD5vO7o7ooA0-ORXuMP6to9CcaL_O3MEH87EiALNOlEv_jO5Sw/exec", { // Use your exact deployment URL
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(dataPayload), // Send the correctly structured data
-          // mode: 'no-cors' // <<< REMOVED this line
-        })
-        // Read the response from the Apps Script
-        .then((response) => {
-          if (!response.ok) { // Check for server errors (status code 4xx, 5xx)
-               // Try to read error text for more info
-               return response.text().then(text => {
-                   console.error(`Error response from server: ${response.status} ${response.statusText}`, text);
-                   throw new Error(`Server error: ${response.status} ${response.statusText} - ${text}`);
-               });
-          }
-          return response.text(); // Get response text if OK (expecting "Success")
-        })
-        .then((text) => {
-          console.log("Server response text:", text); // Log the actual response
-          if (text && text.trim().toLowerCase() === 'success') {
-               console.log("Google Sheet submission appears successful.");
-          } else {
-               console.warn("Server response did not indicate clear success:", text);
-          }
-        })
-        .catch((error) => {
-          // Catches network errors or errors thrown from .then() blocks
-          console.error("❌ Error sending data via fetch:", error);
-          // Optionally alert the user
-          // alert("An error occurred while sending data. Please check the console (F12).");
-        });
-      }
-    </script>
+  console.log("Attempting to send data via fetch:", JSON.stringify(dataPayload).substring(0, 500) + "...");
+
+  fetch("https://script.google.com/macros/s/AKfycbymjapc5sya9P9xXTjDnD5vO7o7ooA0-ORXuMP6to9CcaL_O3MEH87EiALNOlEv_jO5Sw/exec", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(dataPayload)
+  })
+  .then((response) => {
+    if (!response.ok) {
+      return response.text().then(text => {
+        console.error(`Error response from server: ${response.status} ${response.statusText}`, text);
+        throw new Error(`Server error: ${response.status} ${response.statusText} - ${text}`);
+      });
+    }
+    return response.text();
+  })
+  .then((text) => {
+    console.log("Server response text:", text);
+    if (text && text.trim().toLowerCase() === 'success') {
+      console.log("Google Sheet submission appears successful.");
+    } else {
+      console.warn("Server response did not indicate clear success:", text);
+    }
+  })
+  .catch((error) => {
+    console.error("❌ Error sending data via fetch:", error);
+  });
+}
+</script>
     </body>
 </html>
