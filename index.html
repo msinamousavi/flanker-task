@@ -508,42 +508,43 @@
         // --- Utility Functions Implementation (Ensure defined) ---
         // (Definitions for shuffleArray, calculateSD, calculateMedian, formatStimulusWithSpacing are included above in the script)
 
-    </script>
-    <script>
-// ================= GOOGLE FORM SCRIPT (Keep separate) ==================
-<script>
-  // Function renamed and simplified to accept pre-structured data
-      function sendDataToSheetGoogle(dataPayload) {
-  console.log("Attempting to send data via fetch:", JSON.stringify(dataPayload).substring(0, 500) + "...");
+    </script> <script> // <<< CORRECT: Start of the script block for the sending function
 
-  fetch("https://script.google.com/macros/s/AKfycbymjapc5sya9P9xXTjDnD5vO7o7ooA0-ORXuMP6to9CcaL_O3MEH87EiALNOlEv_jO5Sw/exec", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(dataPayload)
-  })
-  .then((response) => {
-    if (!response.ok) {
-      return response.text().then(text => {
-        console.error(`Error response from server: ${response.status} ${response.statusText}`, text);
-        throw new Error(`Server error: ${response.status} ${response.statusText} - ${text}`);
-      });
-    }
-    return response.text();
-  })
-  .then((text) => {
-    console.log("Server response text:", text);
-    if (text && text.trim().toLowerCase() === 'success') {
-      console.log("Google Sheet submission appears successful.");
-    } else {
-      console.warn("Server response did not indicate clear success:", text);
-    }
-  })
-  .catch((error) => {
-    console.error("❌ Error sending data via fetch:", error);
-  });
-}
-</script>
+      // Definition of the sending function
+      function sendDataToSheetGoogle(dataPayload) {
+        console.log("Attempting to send data via fetch:", JSON.stringify(dataPayload).substring(0, 500) + "...");
+
+        fetch("https://script.google.com/macros/s/AKfycbymjapc5sya9P9xXTjDnD5vO7o7ooA0-ORXuMP6to9CcaL_O3MEH87EiALNOlEv_jO5Sw/exec", { // Use your exact deployment URL
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(dataPayload),
+          // Removed mode: 'no-cors'
+        })
+        .then((response) => {
+          if (!response.ok) {
+               return response.text().then(text => {
+                   console.error(`Error response from server: ${response.status} ${response.statusText}`, text);
+                   throw new Error(`Server error: ${response.status} ${response.statusText} - ${text}`);
+               });
+          }
+          return response.text();
+        })
+        .then((text) => {
+          console.log("Server response text:", text);
+          if (text && text.trim().toLowerCase() === 'success') {
+               console.log("Google Sheet submission appears successful.");
+          } else {
+               console.warn("Server response did not indicate clear success:", text);
+          }
+        })
+        .catch((error) => {
+          console.error("❌ Error sending data via fetch:", error);
+        });
+      }
+      // End of the function definition
+
+    </script> // <<< CORRECT: End of the script block for the sending function
     </body>
 </html>
