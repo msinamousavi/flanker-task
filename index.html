@@ -520,29 +520,19 @@
             "Content-Type": "application/json",
           },
           body: JSON.stringify(dataPayload),
-          // Removed mode: 'no-cors'
+          mode: 'no-cors' // <<< ADD THIS LINE BACK
         })
-        .then((response) => {
-          if (!response.ok) {
-               return response.text().then(text => {
-                   console.error(`Error response from server: ${response.status} ${response.statusText}`, text);
-                   throw new Error(`Server error: ${response.status} ${response.statusText} - ${text}`);
-               });
-          }
-          return response.text();
-        })
-        .then((text) => {
-          console.log("Server response text:", text);
-          if (text && text.trim().toLowerCase() === 'success') {
-               console.log("Google Sheet submission appears successful.");
-          } else {
-               console.warn("Server response did not indicate clear success:", text);
-          }
-        })
-        .catch((error) => {
-          console.error("❌ Error sending data via fetch:", error);
-        });
-      }
+        .then(() => {
+      console.log("Data submission fetch initiated (mode: no-cors). You MUST check the Google Sheet and/or Apps Script Execution Logs to confirm success or diagnose server-side errors.");
+      // You cannot check response.ok or response.text() here.
+    })
+    .catch((error) => {
+      // This catch handles network errors preventing the request from being sent,
+      // or errors in the fetch setup itself. It WON'T catch errors from the Apps Script execution.
+      console.error("❌ Error initiating fetch:", error);
+      alert("A network error occurred while trying to send data. Please check your connection and the console (F12). The data might not have been saved.");
+    });
+  }
       // End of the function definition
 
     </script>
