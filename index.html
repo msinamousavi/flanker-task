@@ -469,7 +469,7 @@
             console.log("Data prepared for Google Sheet:", JSON.stringify(dataForSheet).substring(0, 500) + "..."); // Log part of the prepared data payload
             sendDataToSheetGoogle(dataForSheet); // Call the sending function (defined in the separate script block)
             // --- End Prepare Data ---
-
+        }
         // --- Convert Data to CSV (Unaltered) ---
         function convertToCSV(dataArray) {
             if (!dataArray || dataArray.length === 0) return "";
