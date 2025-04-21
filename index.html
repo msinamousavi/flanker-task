@@ -454,21 +454,22 @@
              summaryDiv.classList.remove('hidden');
 
              // --- Prepare Data for Google Sheet ---
-            console.log("Mapping results for Google Sheet..."); // Debug log
-            // Map the raw results to the format expected by Apps Script
+            console.log("Preparing full data for Google Sheet...");
+            
+            // Create the data payload containing participant info,
+            // the complete raw results array, and the complete summary metrics object.
             const dataForSheet = {
-                participantID: participantData.id, // Top-level participant ID
-                age: participantData.age,          // Participant Age
-                gender: participantData.gender,    // Participant Gender
-                rawData: results,                  // Send the COMPLETE raw results array
-                summaryData: summaryMetrics        // Send the COMPLETE summary metrics object
+                participantID: participantData.id, // Top-level ID needed by Apps Script
+                age: participantData.age,          // Add age for easier access in Apps Script
+                gender: participantData.gender,    // Add gender for easier access in Apps Script
+                rawData: results,                  // Send the FULL results array (check key name!)
+                summaryData: summaryMetrics        // Send the FULL summary metrics object (check key name!)
             };
             
-            // Call the function to send the PREPARED data
-                        console.log("Data prepared for Google Sheet:", dataForSheet); // Log the prepared data payload
-                        sendDataToSheetGoogle(dataForSheet); // Call the sending function (will rename below)
+            // Call the function to send the prepared data
+            console.log("Data prepared for Google Sheet:", JSON.stringify(dataForSheet).substring(0, 500) + "..."); // Log part of the prepared data payload
+            sendDataToSheetGoogle(dataForSheet); // Call the sending function (defined in the separate script block)
             // --- End Prepare Data ---
-         }
 
         // --- Convert Data to CSV (Unaltered) ---
         function convertToCSV(dataArray) {
