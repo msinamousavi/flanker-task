@@ -2,48 +2,92 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Flanker Task (Timeout v2)</title> <style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flanker Task (Touch Compatible)</title>
+    <style>
         /* Basic CSS */
         body {
             font-family: Arial, sans-serif; text-align: center; background-color: #f8f9fa;
             margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh;
         }
         .container {
-            max-width: 700px; padding: 30px; border: 1px solid #ccc; background-color: #ffffff;
+            max-width: 700px; width: 95%; /* Allow some flexibility */ padding: 20px; /* Slightly reduced padding for smaller screens */ border: 1px solid #ccc; background-color: #ffffff;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            box-sizing: border-box; /* Include padding in width */
         }
         #task { position: relative; }
 
         #stimulus, #fixation {
-            font-size: 80px; font-family: 'Courier New', Courier, monospace; margin: 40px 0;
-            height: 90px; line-height: 90px; color: #333;
+            font-size: 60px; /* Slightly smaller for mobile */ font-family: 'Courier New', Courier, monospace; margin: 30px 0; /* Adjusted margin */
+            height: 70px; line-height: 70px; /* Adjusted height */ color: #333;
             white-space: pre;
         }
-        #fixation { font-size: 50px; }
+        #fixation { font-size: 40px; }
 
         /* Noise Overlay Styling - Opacity increased */
         #noiseOverlay {
             position: absolute; top: 0; left: 0; right: 0; bottom: 0;
             background-image: radial-gradient(circle, rgba(0,0,0,0.12) 1px, transparent 1px);
             background-size: 3px 3px;
-            opacity: 0.7; /* <<< Increased opacity slightly */
+            opacity: 0.7;
             pointer-events: none;
             z-index: 10;
         }
 
-        button { /* Unchanged */ }
-        button:hover { /* Unchanged */ }
+        /* General Button Styling (Keep yours or adapt) */
+        button {
+             padding: 10px 15px; font-size: 16px; cursor: pointer; margin: 5px;
+             background-color: #007bff; color: white; border: none; border-radius: 4px;
+        }
+        button:hover { background-color: #0056b3; }
+        button:disabled { background-color: #cccccc; cursor: not-allowed; }
+
         .hidden { display: none; }
-        #summary ul, #instructions ul, #participantInfo form { /* Unchanged */ }
-        #summary li, #instructions li, #participantInfo label, #participantInfo input, #participantInfo select { /* Unchanged */ }
-        #participantInfo input, #participantInfo select { /* Unchanged */ }
-        #participantInfo label { /* Unchanged */ }
-        #feedback { /* Unchanged */ }
+
+        /* Form & List Styling (Simplified for brevity, keep yours if preferred) */
+        #participantInfo form { display: flex; flex-direction: column; gap: 10px; align-items: center;}
+        #participantInfo label { margin-right: 5px; text-align: left; width: 180px; }
+        #participantInfo input, #participantInfo select { padding: 8px; border: 1px solid #ccc; border-radius: 4px; width: 200px; }
+        #instructions ul { list-style: none; padding: 0; margin: 15px 0; }
+        #instructions li { margin-bottom: 10px; }
+        #summary ul { list-style: none; padding: 0; text-align: left;}
+        #summary li { margin-bottom: 8px; }
+
+        #feedback { font-size: 24px; font-weight: bold; margin-top: 20px; height: 30px; }
         .correct { color: green; }
         .incorrect { color: red; } /* Used for Incorrect and Too Slow */
-        .error-message { /* Unchanged */ }
-        #developerDataButton { /* Unchanged */ }
-        #developerDataButton:hover { /* Unchanged */ }
+        .error-message { color: red; font-size: 14px; margin-top: 10px; }
+
+        /* Step 2: Added CSS for Touch Buttons */
+        #touchControls {
+            display: flex; /* Arrange buttons side-by-side */
+            justify-content: center; /* Center the buttons horizontally */
+            flex-wrap: wrap; /* Allow wrapping on small screens */
+            width: 100%; /* Take full width for centering */
+            margin-top: 30px; /* Space above the buttons */
+            gap: 10px; /* Space between buttons if they wrap */
+        }
+
+        #touchControls button {
+            font-size: 20px;    /* Adjusted for mobile */
+            padding: 15px 25px; /* Adjusted padding */
+            margin: 0 10px;     /* Space between buttons */
+            cursor: pointer;    /* Indicate they are clickable */
+            border: 2px solid #007bff;
+            background-color: #e7f1ff;
+            color: #333; /* Text color for contrast */
+            border-radius: 8px;
+            min-width: 130px; /* Ensure buttons have a decent minimum width */
+            /* Basic touch feedback (optional) */
+            -webkit-tap-highlight-color: rgba(0,0,0,0.1);
+        }
+
+         #touchControls button:active { /* Style when pressed */
+             background-color: #cce0ff;
+             transform: scale(0.98); /* Slight shrink effect */
+         }
+         /* END OF ADDED CSS RULES */
+
     </style>
 </head>
 <body>
@@ -57,8 +101,8 @@
             <p>The letters may appear close together or further apart.</p>
             <p>Your task is to identify the <strong>center letter</strong> and ignore the surrounding letters and any noise or spacing.</p>
             <ul id="instructionList">
-                 <li>Press <strong>F</strong> if the center letter is <strong>A</strong> or <strong>K</strong></li>
-                 <li>Press <strong>J</strong> if the center letter is <strong>L</strong> or <strong>R</strong></li>
+                <li>Press <strong>F</strong> on your keyboard OR tap the <strong>[A / K (F)]</strong> button if the center letter is <strong>A</strong> or <strong>K</strong></li>
+                <li>Press <strong>J</strong> on your keyboard OR tap the <strong>[L / R (J)]</strong> button if the center letter is <strong>L</strong> or <strong>R</strong></li>
             </ul>
             <p>Please respond as quickly and accurately as possible.</p>
             <p>Click "Continue" to enter your information.</p>
@@ -66,24 +110,24 @@
         </div>
 
         <div id="participantInfo" class="hidden">
-             <h2>Participant Information</h2>
-             <form id="infoForm">
-                 <label for="participantId">Participant ID (5 digits):</label>
-                 <input type="text" id="participantId" name="participantId" pattern="\d{5}" required maxlength="5" title="Enter exactly 5 digits">
-                 <label for="age">Age:</label>
-                 <input type="number" id="age" name="age" required min="1" max="120">
-                 <label for="gender">Gender:</label>
-                 <select id="gender" name="gender" required>
-                     <option value="">--Please select--</option>
-                     <option value="Male">Male</option>
-                     <option value="Female">Female</option>
-                     <option value="Non-binary">Non-binary</option>
-                     <option value="Other">Other</option>
-                     <option value="Prefer_not_to_say">Prefer not to say</option>
-                 </select>
-                 <button type="submit" id="startTaskBtn">Start Task</button>
-                 <div id="infoError" class="error-message hidden">Please fill out all fields correctly.</div>
-             </form>
+            <h2>Participant Information</h2>
+            <form id="infoForm">
+                <label for="participantId">Participant ID (5 digits):</label>
+                <input type="text" id="participantId" name="participantId" pattern="\d{5}" required maxlength="5" title="Enter exactly 5 digits">
+                <label for="age">Age:</label>
+                <input type="number" id="age" name="age" required min="1" max="120">
+                <label for="gender">Gender:</label>
+                <select id="gender" name="gender" required>
+                    <option value="">--Please select--</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Non-binary">Non-binary</option>
+                    <option value="Other">Other</option>
+                    <option value="Prefer_not_to_say">Prefer not to say</option>
+                </select>
+                <button type="submit" id="startTaskBtn">Start Task</button>
+                <div id="infoError" class="error-message hidden">Please fill out all fields correctly.</div>
+            </form>
         </div>
 
         <div id="task" class="hidden">
@@ -91,19 +135,22 @@
             <div id="fixation">+</div>
             <div id="stimulus" class="hidden"></div>
             <div id="feedback" class="hidden"></div>
-        </div>
+            <div id="touchControls" class="hidden"> <button id="touchButtonF">A / K (F)</button>
+              <button id="touchButtonJ">L / R (J)</button>
+            </div>
+            </div>
 
         <div id="summary" class="hidden">
-              <h2>Task Complete!</h2>
-              <p>Here is a summary of your results:</p>
-              <div id="summaryResults"></div>
-              <button id="restartBtn">Restart Task</button>
-              <button id="developerDataButton">Download Raw Data (CSV)</button>
+             <h2>Task Complete!</h2>
+             <p>Here is a summary of your results:</p>
+             <div id="summaryResults"></div>
+             <button id="restartBtn">Restart Task</button>
+             <button id="developerDataButton">Download Raw Data (CSV)</button>
         </div>
     </div>
 
     <script>
-        // --- Get References (Unaltered) ---
+        // --- Get References ---
         const continueToInfoBtn = document.getElementById('continueToInfoBtn');
         const instructionsDiv = document.getElementById('instructions');
         const participantInfoDiv = document.getElementById('participantInfo');
@@ -122,8 +169,13 @@
         const summaryResultsDiv = document.getElementById('summaryResults');
         const restartBtn = document.getElementById('restartBtn');
         const developerDataButton = document.getElementById('developerDataButton');
+        // Step 3: Added JS References for Touch Buttons
+        const touchControlsDiv = document.getElementById('touchControls');
+        const touchButtonF = document.getElementById('touchButtonF');
+        const touchButtonJ = document.getElementById('touchButtonJ');
+        // END OF ADDED LINES
 
-        // --- Task State Variables (Added trialTimeoutId) ---
+        // --- Task State Variables ---
         let trials = [];
         let currentTrialIndex = 0;
         let results = [];
@@ -131,16 +183,16 @@
         let participantData = {};
         let stimulusStartTime;
         let experimentStartTime;
-        let responseListener = null;
-        let trialTimeoutId = null; // <<< For response timeout
+        let responseListener = null; // For keyboard
+        let trialTimeoutId = null;
 
-        // --- Timing Parameters (Added MAX_RESPONSE_TIME) ---
+        // --- Timing Parameters ---
         const FIXATION_DURATION = 500;
         const FEEDBACK_DURATION = 750;
         const ITI = 500;
-        const MAX_RESPONSE_TIME = 1500; // <<< 1.5 second response window
+        const MAX_RESPONSE_TIME = 1500; // 1.5 second response window
 
-        // --- Utility Functions (Ensure they are defined and unaltered) ---
+        // --- Utility Functions ---
         function shuffleArray(array) {
              for (let i = array.length - 1; i > 0; i--) {
                  const j = Math.floor(Math.random() * (i + 1));
@@ -160,17 +212,18 @@
              const mid = Math.floor(sortedData.length / 2);
              return sortedData.length % 2 === 0 ? (sortedData[mid - 1] + sortedData[mid]) / 2 : sortedData[mid];
          }
-        function formatStimulusWithSpacing(stimulusString, spacingType) {
+       function formatStimulusWithSpacing(stimulusString, spacingType) {
              const letters = stimulusString.split(''); let space = '';
              switch (spacingType) {
-                 case 'double': space = '\u00A0'; break;
-                 case 'triple': space = '\u00A0\u00A0'; break;
-                 default: space = ''; break;
+                 case 'double': space = '\u00A0'; break; // Non-breaking space
+                 case 'triple': space = '\u00A0\u00A0'; break; // Two non-breaking spaces
+                 default: space = ''; break; // Single spacing (no extra space)
              }
+             // Use innerHTML with explicit spaces for wider compatibility than template literals with spaces
              return letters.join(space);
-         }
+        }
 
-        // --- Define Trials (Unaltered) ---
+        // --- Define Trials ---
         function setupTrials() {
             const letters = { set1: ['A', 'K'], set2: ['L', 'R'] };
             const conditions = { congruency: ['congruent', 'incongruent'], noise: ['no', 'yes'], spacing: ['single', 'double', 'triple'] };
@@ -186,20 +239,24 @@
                              let stimulusString = "";
                              if (cong === 'congruent') { stimulusString = targetLetter.repeat(5); }
                              else { const flankerLetter = flankerSet[Math.floor(Math.random() * flankerSet.length)]; stimulusString = `${flankerLetter}${flankerLetter}${targetLetter}${flankerLetter}${flankerLetter}`; }
-                             baseTrials.push({ stimulus_base: stimulusString, centerLetter: targetLetter, correctKey: correctKey, condition_congruency: cong, condition_noise: noiseType, condition_spacing: spacingType });
-                        }
+                             baseTrials.push({
+                                stimulus_base: stimulusString, centerLetter: targetLetter, correctKey: correctKey,
+                                condition_congruency: cong, condition_noise: noiseType, condition_spacing: spacingType,
+                                touchFHandler: null, touchJHandler: null // Initialize handler properties
+                             });
+                         }
                     }
                 }
             }
-             const repeatedTrials = []; const reps = 4; // 24 * 4 = 96 trials
-             for (let i=0; i<reps; i++){ repeatedTrials.push(...baseTrials.map(trial => ({...trial}))); }
+             const repeatedTrials = []; const reps = 4; // 24 conditions * 4 reps = 96 trials
+             for (let i=0; i<reps; i++){ repeatedTrials.push(...baseTrials.map(trial => ({...trial}))); } // Deep copy needed if modifying handlers per trial run
              trials = shuffleArray(repeatedTrials);
              currentTrialIndex = 0; results = [];
              console.log(`Setup complete: ${trials.length} trials generated.`);
         }
 
 
-        // --- Start Experiment Flow (Unaltered) ---
+        // --- Start Experiment Flow ---
         function startExperiment() {
              console.log("Starting experiment for participant:", participantData);
              experimentStartTime = performance.now();
@@ -208,48 +265,83 @@
              else { console.error("No trials defined!"); }
         }
 
-        // --- Run a Single Trial (Added timeout start logic) ---
+        // --- Run a Single Trial ---
         function runTrial(trialIndex) {
             if (trialIndex >= trials.length) { endExperiment(); return; }
             const currentTrial = trials[trialIndex];
 
-            // Clear previous timeout just in case (good practice)
+            // Clear previous timeout just in case
             if (trialTimeoutId) clearTimeout(trialTimeoutId);
+            trialTimeoutId = null; // Reset timeout ID
 
             // Reset visuals
             taskDiv.classList.remove('hidden');
             stimulusDiv.classList.add('hidden');
             feedbackDiv.classList.add('hidden');
             noiseOverlay.classList.add('hidden');
+            // Step 5.1: Hide touch buttons at trial start
+            touchControlsDiv.classList.add('hidden');
             fixationDiv.textContent = '+';
             fixationDiv.classList.remove('hidden');
 
+             // Disable response buttons initially
+            touchButtonF.disabled = true;
+            touchButtonJ.disabled = true;
+
+
             // Show fixation, then schedule stimulus presentation
             setTimeout(() => {
-                try { // Add try-catch for debugging visibility
+                try {
                     fixationDiv.classList.add('hidden');
 
                     const formattedStimulus = formatStimulusWithSpacing(
                         currentTrial.stimulus_base, currentTrial.condition_spacing
                     );
-                    stimulusDiv.innerHTML = formattedStimulus;
+                    stimulusDiv.innerHTML = formattedStimulus; // Use innerHTML to render spaces correctly
                     stimulusDiv.classList.remove('hidden');
+
+                    // Step 5.2: Show touch buttons with stimulus
+                    touchControlsDiv.classList.remove('hidden');
 
                     if (currentTrial.condition_noise === 'yes') {
                         noiseOverlay.classList.remove('hidden');
-                    } // Noise overlay shown/hidden correctly
+                    }
 
                     stimulusStartTime = performance.now();
 
-                    // Add keyboard listener
+                    // --- Add Listeners ---
+
+                    // Remove previous listeners just in case (robustness)
                     if (responseListener) document.removeEventListener('keydown', responseListener);
+                    if (currentTrial.touchFHandler) touchButtonF.removeEventListener('click', currentTrial.touchFHandler);
+                    if (currentTrial.touchJHandler) touchButtonJ.removeEventListener('click', currentTrial.touchJHandler);
+
+
+                    // Add keyboard listener
                     responseListener = (event) => handleKeyPress(event, currentTrial);
                     document.addEventListener('keydown', responseListener);
 
-                    // <<< Start the response timeout >>>
-                    console.log(`Starting timeout for trial ${trialIndex}`); // Debug log
+                    // Step 6: Add Touch Button Event Listeners
+                    currentTrial.touchFHandler = () => {
+                        console.log("Touch F button pressed");
+                        handleKeyPress({ key: 'f' }, currentTrial); // Simulate event
+                    };
+                    touchButtonF.addEventListener('click', currentTrial.touchFHandler);
+
+                    currentTrial.touchJHandler = () => {
+                        console.log("Touch J button pressed");
+                        handleKeyPress({ key: 'j' }, currentTrial); // Simulate event
+                    };
+                    touchButtonJ.addEventListener('click', currentTrial.touchJHandler);
+                     // END OF ADDED EVENT LISTENERS
+
+                    // Enable response buttons now
+                    touchButtonF.disabled = false;
+                    touchButtonJ.disabled = false;
+
+                    // Start the response timeout
+                    console.log(`Starting timeout for trial ${trialIndex}`);
                     trialTimeoutId = setTimeout(() => {
-                        // Ensure handleTimeout is called with the correct trial context
                         handleTimeout(currentTrial);
                     }, MAX_RESPONSE_TIME);
 
@@ -257,36 +349,55 @@
                      console.error(`Error in runTrial setTimeout callback for trial ${trialIndex}:`, error);
                      // Optionally, try to recover or end experiment gracefully
                      // endExperiment();
-                }
+                 }
 
             }, FIXATION_DURATION);
         }
 
-        // --- Handle Key Press (Added timeout clear logic) ---
+        // --- Handle Key Press / Touch ---
         function handleKeyPress(event, trial) {
+            // Check if a response for this trial has already been processed (e.g., by timeout or rapid double-click)
+            // This check might be necessary if removeEventListener doesn't guarantee immediate effect
+            // or if race conditions occur.
+            if (results.some(r => r.trialIndex === currentTrialIndex)) {
+                 console.log(`Response for trial ${currentTrialIndex} already recorded, ignoring duplicate input.`);
+                 return; // Already processed
+             }
+
+
             const key = event.key.toLowerCase();
+            // Check if the key is valid OR if the event came from a touch button (which simulates the key)
             if (key === 'f' || key === 'j') {
 
-                // <<< Attempt to clear the timeout >>>
+                // Clear the response timeout
                 if (trialTimeoutId) {
-                    console.log(`Clearing timeout for trial ${currentTrialIndex} due to keypress.`); // Debug log
+                    console.log(`Clearing timeout for trial ${currentTrialIndex} due to response.`);
                     clearTimeout(trialTimeoutId);
-                    trialTimeoutId = null; // Important to nullify after clearing
+                    trialTimeoutId = null;
                 } else {
-                     console.warn(`handleKeyPress called for trial ${currentTrialIndex}, but no active timeoutId found.`); // Should not happen if timeout started correctly
-                     // Continue processing anyway, assuming timeout didn't fire yet or was somehow cleared
-                }
-                // <<< --- >>>
+                    console.warn(`handleKeyPress called for trial ${currentTrialIndex}, but no active timeoutId found.`);
+                 }
 
-                // Remove listener *immediately* to prevent multiple triggers
-                // And *before* potentially slow operations like DOM updates or complex logic
+
+                // --- Remove Listeners Immediately ---
                 if (responseListener) {
                     document.removeEventListener('keydown', responseListener);
                     responseListener = null;
-                } else {
-                    console.warn(`handleKeyPress called for trial ${currentTrialIndex}, but no active responseListener found.`);
-                    return; // Avoid processing if listener was already removed (e.g., by timeout)
                 }
+                // Step 7.1: Remove Touch Listeners
+                if (trial.touchFHandler) {
+                    touchButtonF.removeEventListener('click', trial.touchFHandler);
+                    // trial.touchFHandler = null; // Optional: clear handler reference
+                }
+                if (trial.touchJHandler) {
+                    touchButtonJ.removeEventListener('click', trial.touchJHandler);
+                    // trial.touchJHandler = null; // Optional: clear handler reference
+                }
+                // END OF REMOVAL
+
+                // Disable response buttons immediately after a response is registered
+                touchButtonF.disabled = true;
+                touchButtonJ.disabled = true;
 
 
                 const reactionTime = performance.now() - stimulusStartTime;
@@ -294,12 +405,16 @@
                 const centerLower = trial.centerLetter.toLowerCase();
                 if (['a', 'k'].includes(centerLower)) expectedKey = 'f';
                 else if (['l', 'r'].includes(centerLower)) expectedKey = 'j';
-                else expectedKey = '?';
+                else expectedKey = '?'; // Should not happen with current setup
                 const correct = key === expectedKey;
 
+                // Hide stimulus elements
                 stimulusDiv.classList.add('hidden');
                 noiseOverlay.classList.add('hidden');
+                // Step 5.3: Hide touch buttons on response
+                touchControlsDiv.classList.add('hidden');
 
+                // --- Record Result ---
                 results.push({
                     participantId: participantData.id, age: participantData.age, gender: participantData.gender,
                     trialIndex: currentTrialIndex, stimulus: trial.stimulus_base, centerLetter: trial.centerLetter,
@@ -314,119 +429,131 @@
                 setTimeout(() => {
                     currentTrialIndex++;
                     runTrial(currentTrialIndex);
-                }, FEEDBACK_DURATION + ITI);
+                }, FEEDBACK_DURATION + ITI); // Wait for feedback + ITI
             }
         }
 
-        // --- >>> NEW Handle Timeout Function <<< ---
+        // --- Handle Timeout ---
         function handleTimeout(trial) {
-             console.warn(`Timeout occurred for trial ${currentTrialIndex}`); // Debug log
-             trialTimeoutId = null; // Nullify the ID
+             console.warn(`Timeout occurred for trial ${currentTrialIndex}`);
+             trialTimeoutId = null; // Nullify the ID as it has fired
 
-             // Remove listener if it hasn't been removed by a keypress
+            // Check if a response for this trial has already been processed (e.g., by a keypress just before timeout)
+             if (results.some(r => r.trialIndex === currentTrialIndex)) {
+                 console.log(`Result for trial ${currentTrialIndex} already recorded, ignoring timeout.`);
+                 return; // Exit timeout processing
+             }
+
+             // --- Remove Listeners ---
              if (responseListener) {
                  document.removeEventListener('keydown', responseListener);
                  responseListener = null;
-             } else {
-                  console.warn(`handleTimeout called for trial ${currentTrialIndex}, but no active responseListener found.`);
-                 // If listener is already null, it means handleKeyPress likely ran JUST before timeout fired - rare race condition maybe?
-                 // Or maybe timeout fired after handleKeyPress cleared the listener but before handleKeyPress finished?
-                 // In this scenario, the keypress result is already recorded, so we should NOT record a timeout.
-                 // Let's add a check: if a result for this index already exists, don't process timeout.
-                 if(results.some(r => r.trialIndex === currentTrialIndex)) {
-                    console.log(`Result for trial ${currentTrialIndex} already recorded, ignoring timeout.`);
-                    return; // Exit timeout processing
-                 }
              }
+             // Step 7.2: Remove Touch Listeners on Timeout
+            if (trial.touchFHandler) {
+                touchButtonF.removeEventListener('click', trial.touchFHandler);
+                // trial.touchFHandler = null;
+             }
+            if (trial.touchJHandler) {
+                touchButtonJ.removeEventListener('click', trial.touchJHandler);
+                // trial.touchJHandler = null;
+             }
+            // END OF REMOVAL
 
-             stimulusDiv.classList.add('hidden');
-             noiseOverlay.classList.add('hidden');
+            // Disable response buttons
+            touchButtonF.disabled = true;
+            touchButtonJ.disabled = true;
 
-             // Record timeout result (Incorrect, latency -1)
-             results.push({
-                 participantId: participantData.id, age: participantData.age, gender: participantData.gender,
-                 trialIndex: currentTrialIndex, stimulus: trial.stimulus_base, centerLetter: trial.centerLetter,
-                 congruency: trial.condition_congruency, noise: trial.condition_noise, spacing: trial.condition_spacing,
-                 response: 'timeout',
-                 correctKey: trial.correctKey, // Still record what the correct key *was*
-                 correct: 0, // Timeout counts as incorrect
-                 latency_ms: -1 // Indicate timeout with -1
-             });
+            // Hide stimulus elements
+            stimulusDiv.classList.add('hidden');
+            noiseOverlay.classList.add('hidden');
+            // Step 5.4: Hide touch buttons on timeout
+            touchControlsDiv.classList.add('hidden');
 
-             showFeedback("Too Slow");
+            // --- Record Timeout Result ---
+            results.push({
+                participantId: participantData.id, age: participantData.age, gender: participantData.gender,
+                trialIndex: currentTrialIndex, stimulus: trial.stimulus_base, centerLetter: trial.centerLetter,
+                congruency: trial.condition_congruency, noise: trial.condition_noise, spacing: trial.condition_spacing,
+                response: 'timeout', // Indicate timeout
+                correctKey: trial.correctKey,
+                correct: 0, // Timeout counts as incorrect
+                latency_ms: -1 // Indicate timeout with -1 latency
+            });
 
-             // Schedule next trial
-             setTimeout(() => {
-                  currentTrialIndex++;
-                  runTrial(currentTrialIndex);
-             }, FEEDBACK_DURATION + ITI);
+            showFeedback("Too Slow");
+
+            // Schedule next trial
+            setTimeout(() => {
+                 currentTrialIndex++;
+                 runTrial(currentTrialIndex);
+            }, FEEDBACK_DURATION + ITI); // Wait for feedback + ITI
         }
 
-        // --- Show Feedback (Modified to accept message) ---
+        // --- Show Feedback ---
         function showFeedback(message) {
-             feedbackDiv.classList.remove('hidden');
-             if (message === "Correct") {
-                 feedbackDiv.className = 'correct';
-                 feedbackDiv.textContent = "Correct";
-             } else { // Handles "Incorrect" or "Too Slow"
-                 feedbackDiv.className = 'incorrect'; // Use red color
-                 feedbackDiv.textContent = message;
-             }
-         }
+            feedbackDiv.classList.remove('hidden');
+            feedbackDiv.className = ''; // Clear previous classes
+            if (message === "Correct") {
+                feedbackDiv.classList.add('correct');
+                feedbackDiv.textContent = "Correct";
+            } else { // Handles "Incorrect" or "Too Slow"
+                feedbackDiv.classList.add('incorrect'); // Use red color
+                feedbackDiv.textContent = message;
+            }
+        }
 
-        // --- End Experiment (Modified for timeout count/stats) ---
+        // --- End Experiment ---
         function endExperiment() {
-              const experimentEndTime = performance.now();
-              const totalElapsedTime_ms = experimentEndTime - experimentStartTime;
-              console.log("Experiment ended. Calculating metrics...");
-              taskDiv.classList.add('hidden');
+            const experimentEndTime = performance.now();
+            const totalElapsedTime_ms = experimentEndTime - experimentStartTime;
+            console.log("Experiment ended. Calculating metrics...");
+            taskDiv.classList.add('hidden');
+            touchControlsDiv.classList.add('hidden'); // Ensure buttons hidden
 
-              let correctCount = 0; let totalCorrectRT = 0; let correctRTs = [];
-              let noiseYesCorrect = 0, noiseYesTotal = 0; let noiseNoCorrect = 0, noiseNoTotal = 0;
-              let spacingSingleCorrect = 0, spacingSingleTotal = 0; let spacingDoubleCorrect = 0, spacingDoubleTotal = 0; let spacingTripleCorrect = 0, spacingTripleTotal = 0;
-              let timeoutCount = 0;
+            let correctCount = 0; let totalCorrectRT = 0; let correctRTs = [];
+            let noiseYesCorrect = 0, noiseYesTotal = 0; let noiseNoCorrect = 0, noiseNoTotal = 0;
+            let spacingSingleCorrect = 0, spacingSingleTotal = 0; let spacingDoubleCorrect = 0, spacingDoubleTotal = 0; let spacingTripleCorrect = 0, spacingTripleTotal = 0;
+            let timeoutCount = 0;
 
-              results.forEach(res => {
-                  if (res.noise === 'yes') noiseYesTotal++; else noiseNoTotal++;
-                  if (res.spacing === 'single') spacingSingleTotal++; else if (res.spacing === 'double') spacingDoubleTotal++; else if (res.spacing === 'triple') spacingTripleTotal++;
+            results.forEach(res => {
+                 if (res.noise === 'yes') noiseYesTotal++; else noiseNoTotal++;
+                 if (res.spacing === 'single') spacingSingleTotal++; else if (res.spacing === 'double') spacingDoubleTotal++; else if (res.spacing === 'triple') spacingTripleTotal++;
 
-                  if (res.response === 'timeout') {
-                      timeoutCount++;
-                  } else if (res.correct === 1) {
-                      correctCount++;
-                      // Ensure latency is valid before including in RT stats
-                      if (res.latency_ms !== -1) {
-                          totalCorrectRT += res.latency_ms;
-                          correctRTs.push(res.latency_ms);
-                      }
-                      // Correct counts by condition (only non-timeout correct)
-                      if (res.noise === 'yes') noiseYesCorrect++; else noiseNoCorrect++;
-                      if (res.spacing === 'single') spacingSingleCorrect++; else if (res.spacing === 'double') spacingDoubleCorrect++; else if (res.spacing === 'triple') spacingTripleCorrect++;
-                  }
-              });
+                 if (res.response === 'timeout') {
+                     timeoutCount++;
+                 } else if (res.correct === 1) {
+                     correctCount++;
+                     if (res.latency_ms !== -1) { // Ensure latency is valid
+                         totalCorrectRT += res.latency_ms;
+                         correctRTs.push(res.latency_ms);
+                     }
+                     // Correct counts by condition (only non-timeout correct)
+                     if (res.noise === 'yes') noiseYesCorrect++; else noiseNoCorrect++;
+                     if (res.spacing === 'single') spacingSingleCorrect++; else if (res.spacing === 'double') spacingDoubleCorrect++; else if (res.spacing === 'triple') spacingTripleCorrect++;
+                 }
+             });
 
-              const totalTrials = results.length;
-              const respondedTrials = totalTrials - timeoutCount;
-              const overallAccuracy = totalTrials > 0 ? (correctCount / totalTrials) * 100 : 0; // Accuracy including timeouts as errors
-              const accuracyResponded = respondedTrials > 0 ? (correctCount / respondedTrials) * 100 : 0; // Accuracy excluding timeouts
-              const overallErrorRate = 100 - overallAccuracy; // Error rate including timeouts
+            const totalTrials = results.length;
+            const respondedTrials = totalTrials - timeoutCount;
+            const overallAccuracy = totalTrials > 0 ? (correctCount / totalTrials) * 100 : 0;
+            const accuracyResponded = respondedTrials > 0 ? (correctCount / respondedTrials) * 100 : 0;
+            const overallErrorRate = 100 - overallAccuracy;
 
-              // Calculate RT stats only on valid (non-timeout) correct trials
-              const overallMeanRT = correctCount > 0 ? (totalCorrectRT / correctCount) : 0;
-              const overallSDRT = calculateSD(correctRTs, overallMeanRT);
-              const overallMinRT = correctRTs.length > 0 ? Math.min(...correctRTs) : 0;
-              const overallMaxRT = correctRTs.length > 0 ? Math.max(...correctRTs) : 0;
-              const overallMedianRT = calculateMedian(correctRTs);
+            const overallMeanRT = correctCount > 0 ? (totalCorrectRT / correctCount) : 0;
+            const overallSDRT = calculateSD(correctRTs, overallMeanRT);
+            const overallMinRT = correctRTs.length > 0 ? Math.min(...correctRTs) : 0;
+            const overallMaxRT = correctRTs.length > 0 ? Math.max(...correctRTs) : 0;
+            const overallMedianRT = calculateMedian(correctRTs);
 
-              // Calculate accuracy by condition (using total trials in condition as denominator)
-              const accuracyNoiseYes = noiseYesTotal > 0 ? (results.filter(r => r.noise === 'yes' && r.correct === 1).length / noiseYesTotal) * 100 : 0;
-              const accuracyNoiseNo = noiseNoTotal > 0 ? (results.filter(r => r.noise === 'no' && r.correct === 1).length / noiseNoTotal) * 100 : 0;
-              const accuracySpacingSingle = spacingSingleTotal > 0 ? (results.filter(r => r.spacing === 'single' && r.correct === 1).length / spacingSingleTotal) * 100 : 0;
-              const accuracySpacingDouble = spacingDoubleTotal > 0 ? (results.filter(r => r.spacing === 'double' && r.correct === 1).length / spacingDoubleTotal) * 100 : 0;
-              const accuracySpacingTriple = spacingTripleTotal > 0 ? (results.filter(r => r.spacing === 'triple' && r.correct === 1).length / spacingTripleTotal) * 100 : 0;
+            const accuracyNoiseYes = noiseYesTotal > 0 ? (results.filter(r => r.noise === 'yes' && r.correct === 1).length / noiseYesTotal) * 100 : 0;
+            const accuracyNoiseNo = noiseNoTotal > 0 ? (results.filter(r => r.noise === 'no' && r.correct === 1).length / noiseNoTotal) * 100 : 0;
+            const accuracySpacingSingle = spacingSingleTotal > 0 ? (results.filter(r => r.spacing === 'single' && r.correct === 1).length / spacingSingleTotal) * 100 : 0;
+            const accuracySpacingDouble = spacingDoubleTotal > 0 ? (results.filter(r => r.spacing === 'double' && r.correct === 1).length / spacingDoubleTotal) * 100 : 0;
+            const accuracySpacingTriple = spacingTripleTotal > 0 ? (results.filter(r => r.spacing === 'triple' && r.correct === 1).length / spacingTripleTotal) * 100 : 0;
 
 
-             summaryMetrics = {
+            summaryMetrics = {
                  totalElapsedTime_s: (totalElapsedTime_ms / 1000).toFixed(2), totalTrials: totalTrials, timeoutCount: timeoutCount,
                  overallAccuracy: overallAccuracy.toFixed(2), // Accuracy including timeouts as errors
                  overallErrorRate: overallErrorRate.toFixed(2),
@@ -436,9 +563,9 @@
                  accuracyNoiseYes: accuracyNoiseYes.toFixed(2), accuracyNoiseNo: accuracyNoiseNo.toFixed(2),
                  accuracySpacingSingle: accuracySpacingSingle.toFixed(2), accuracySpacingDouble: accuracySpacingDouble.toFixed(2), accuracySpacingTriple: accuracySpacingTriple.toFixed(2),
              };
-             console.log("Summary Metrics:", summaryMetrics);
-             // Updated Summary Display
-             summaryResultsDiv.innerHTML = `
+            console.log("Summary Metrics:", summaryMetrics);
+
+            summaryResultsDiv.innerHTML = `
                  <ul>
                      <li>Total Task Time: ${summaryMetrics.totalElapsedTime_s} seconds</li>
                      <li>Overall Accuracy (incl. Timeouts): ${summaryMetrics.overallAccuracy}% (${correctCount}/${totalTrials})</li>
@@ -450,82 +577,127 @@
                      <li>Accuracy by Noise (No / Yes): ${summaryMetrics.accuracyNoiseNo}% / ${summaryMetrics.accuracyNoiseYes}%</li>
                      <li>Accuracy by Spacing (Single / Double / Triple): ${summaryMetrics.accuracySpacingSingle}% / ${summaryMetrics.accuracySpacingDouble}% / ${summaryMetrics.accuracySpacingTriple}%</li>
                  </ul>`;
-             summaryDiv.classList.remove('hidden');
+            summaryDiv.classList.remove('hidden');
 
-             // --- Prepare Data for Google Sheet ---
-            console.log("Preparing full data for Google Sheet...");
-            
-            // Create the data payload containing participant info,
-            // the complete raw results array, and the complete summary metrics object.
-            const dataForSheet = {
-                participantID: participantData.id, // Top-level ID needed by Apps Script
-                age: participantData.age,          // Add age for easier access in Apps Script
-                gender: participantData.gender,    // Add gender for easier access in Apps Script
-                rawData: results,                  // Send the FULL results array (check key name!)
-                summaryData: summaryMetrics        // Send the FULL summary metrics object (check key name!)
-            };
-            
-            // Call the function to send the prepared data
-            console.log("Data prepared for Google Sheet:", JSON.stringify(dataForSheet).substring(0, 500) + "..."); // Log part of the prepared data payload
-            sendDataToSheetGoogle(dataForSheet); // Call the sending function (defined in the separate script block)
-            // --- End Prepare Data ---
+            // --- Prepare Data for Google Sheet ---
+             console.log("Preparing full data for Google Sheet...");
+             const dataForSheet = {
+                 participantID: participantData.id,
+                 age: participantData.age,
+                 gender: participantData.gender,
+                 rawData: results,
+                 summaryData: summaryMetrics
+             };
+             console.log("Data prepared for Google Sheet:", JSON.stringify(dataForSheet).substring(0, 500) + "...");
+             sendDataToSheetGoogle(dataForSheet); // Call the sending function
+             // --- End Prepare Data ---
         }
-        // --- Convert Data to CSV (Unaltered) ---
+
+        // --- Convert Data to CSV ---
         function convertToCSV(dataArray) {
-            if (!dataArray || dataArray.length === 0) return "";
-            const headers = Object.keys(dataArray[0]); const csvRows = [ headers.join(',') ];
-            dataArray.forEach(row => {
-                const values = headers.map(header => { let value = row[header]; if (typeof value === 'string' && (value.includes(',') || value.includes('"') || value.includes('\n'))) { value = `"${value.replace(/"/g, '""')}"`; } return value; });
-                csvRows.push(values.join(','));
-            }); return csvRows.join('\n');
-        }
+             if (!dataArray || dataArray.length === 0) return "";
+             // Explicitly define headers in desired order, including participant info
+             const headers = [
+                'participantId', 'age', 'gender', 'trialIndex', 'stimulus', 'centerLetter',
+                'congruency', 'noise', 'spacing', 'response', 'correctKey', 'correct', 'latency_ms'
+             ];
+             const csvRows = [ headers.join(',') ]; // Header row
 
-        // --- Trigger CSV Download (Unaltered) ---
+             dataArray.forEach(row => {
+                 // Ensure all header fields are present in the row data, even if null/undefined initially
+                const values = headers.map(header => {
+                    let value = row[header];
+                    // Handle null/undefined values gracefully
+                    if (value === null || typeof value === 'undefined') {
+                        value = '';
+                    }
+                    // Quote strings containing commas, quotes, or newlines
+                    if (typeof value === 'string' && (value.includes(',') || value.includes('"') || value.includes('\n'))) {
+                        value = `"${value.replace(/"/g, '""')}"`; // Escape double quotes
+                     }
+                    return value;
+                 });
+                 csvRows.push(values.join(','));
+             });
+             return csvRows.join('\n');
+         }
+
+        // --- Trigger CSV Download ---
         function downloadCSVData() {
-            const csvData = convertToCSV(results); if (!csvData) { console.error("No data available to download."); alert("No data available to download."); return; }
-            const blob = new Blob([csvData], {type: "text/csv;charset=utf-8;"}); const url = URL.createObjectURL(blob);
-            const a = document.createElement('a'); const date = new Date();
-            const timestamp = `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}_${String(date.getHours()).padStart(2, '0')}${String(date.getMinutes()).padStart(2, '0')}${String(date.getSeconds()).padStart(2, '0')}`;
-            a.download = `flanker_raw_data_${participantData.id}_${timestamp}.csv`; a.href = url; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
-            console.log("CSV Data download initiated.");
+             const csvData = convertToCSV(results); if (!csvData) { console.error("No data available to download."); alert("No data available to download."); return; }
+             const blob = new Blob([csvData], {type: "text/csv;charset=utf-8;"}); const url = URL.createObjectURL(blob);
+             const a = document.createElement('a'); const date = new Date();
+             const timestamp = `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}_${String(date.getHours()).padStart(2, '0')}${String(date.getMinutes()).padStart(2, '0')}${String(date.getSeconds()).padStart(2, '0')}`;
+             a.download = `flanker_raw_data_${participantData.id || 'UNKNOWN'}_${timestamp}.csv`; a.href = url; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+             console.log("CSV Data download initiated.");
         }
 
-        // --- Event Listeners (Unaltered) ---
+        // --- Event Listeners Setup ---
         continueToInfoBtn.addEventListener('click', () => { instructionsDiv.classList.add('hidden'); participantInfoDiv.classList.remove('hidden'); });
-        infoForm.addEventListener('submit', (event) => { event.preventDefault(); const id = participantIdInput.value; const age = ageInput.value; const gender = genderInput.value; if (id.match(/^\d{5}$/) && age && gender) { participantData = { id: id, age: parseInt(age), gender: gender }; infoErrorDiv.classList.add('hidden'); participantInfoDiv.classList.add('hidden'); startExperiment(); } else { infoErrorDiv.textContent = "Please ensure ID is 5 digits and all fields are filled."; infoErrorDiv.classList.remove('hidden'); } });
-        restartBtn.addEventListener('click', () => { summaryDiv.classList.add('hidden'); instructionsDiv.classList.remove('hidden'); });
+
+        infoForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+            const id = participantIdInput.value.trim();
+            const age = ageInput.value;
+            const gender = genderInput.value;
+            // Validate input
+            if (id.match(/^\d{5}$/) && age && parseInt(age) > 0 && gender) {
+                participantData = { id: id, age: parseInt(age), gender: gender };
+                infoErrorDiv.classList.add('hidden');
+                participantInfoDiv.classList.add('hidden');
+                startTaskBtn.disabled = true; // Prevent resubmission
+                startExperiment();
+            } else {
+                infoErrorDiv.textContent = "Please ensure ID is exactly 5 digits, age is valid, and gender is selected.";
+                infoErrorDiv.classList.remove('hidden');
+             }
+        });
+
+        restartBtn.addEventListener('click', () => {
+            // Reset state if needed before showing instructions again
+            summaryDiv.classList.add('hidden');
+            participantInfoDiv.classList.add('hidden'); // Go back to instructions, not info form
+            instructionsDiv.classList.remove('hidden');
+            // Reset form fields and enable button
+            infoForm.reset();
+            startTaskBtn.disabled = false;
+            participantIdInput.value = ''; // Clear input explicitly if reset() doesn't
+            ageInput.value = '';
+            genderInput.value = '';
+            participantData = {}; // Clear participant data
+            results = []; // Clear results
+            summaryMetrics = {}; // Clear summary
+            currentTrialIndex = 0; // Reset trial counter
+        });
+
         developerDataButton.addEventListener('click', downloadCSVData);
 
-        // --- Utility Functions Implementation (Ensure defined) ---
-        // (Definitions for shuffleArray, calculateSD, calculateMedian, formatStimulusWithSpacing are included above in the script)
-
-    </script> <script> 
-
-      // Definition of the sending function
-      function sendDataToSheetGoogle(dataPayload) {
-        console.log("Attempting to send data via fetch:", JSON.stringify(dataPayload).substring(0, 500) + "...");
-
-        fetch("https://script.google.com/macros/s/AKfycbymjapc5sya9P9xXTjDnD5vO7o7ooA0-ORXuMP6to9CcaL_O3MEH87EiALNOlEv_jO5Sw/exec", { // Use your exact deployment URL
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(dataPayload),
-          mode: 'no-cors' // <<< ADD THIS LINE BACK
-        })
-        .then(() => {
-      console.log("Data submission fetch initiated (mode: no-cors). You MUST check the Google Sheet and/or Apps Script Execution Logs to confirm success or diagnose server-side errors.");
-      // You cannot check response.ok or response.text() here.
-    })
-    .catch((error) => {
-      // This catch handles network errors preventing the request from being sent,
-      // or errors in the fetch setup itself. It WON'T catch errors from the Apps Script execution.
-      console.error("❌ Error initiating fetch:", error);
-      alert("A network error occurred while trying to send data. Please check your connection and the console (F12). The data might not have been saved.");
-    });
-  }
-      // End of the function definition
-
     </script>
-    </body>
+
+    <script>
+        function sendDataToSheetGoogle(dataPayload) {
+          console.log("Attempting to send data via fetch:", JSON.stringify(dataPayload).substring(0, 500) + "...");
+          // **** IMPORTANT: Replace with YOUR Google Apps Script Web App URL ****
+          const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbymjapc5sya9P9xXTjDnD5vO7o7ooA0-ORXuMP6to9CcaL_O3MEH87EiALNOlEv_jO5Sw/exec";
+
+          fetch(GOOGLE_SCRIPT_URL, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(dataPayload),
+            mode: 'no-cors' // IMPORTANT for sending to Google Apps Script without complex CORS setup
+          })
+          .then(() => {
+           console.log("Data submission fetch initiated (mode: no-cors). Check Google Sheet/Apps Script Logs for success/errors.");
+           // Cannot read response body in no-cors mode. Assume success unless network error caught.
+          })
+          .catch((error) => {
+            console.error("❌ Error initiating fetch to Google Sheet:", error);
+            alert("A network error occurred while trying to send data to the Google Sheet. Please check your connection and the console (F12). The data might not have been saved online.");
+          });
+       }
+    </script>
+
+</body>
 </html>
